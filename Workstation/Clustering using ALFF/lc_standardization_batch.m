@@ -1,0 +1,16 @@
+inpath='D:\WorkStation_2018\WorkStation_2018_11_machineLearning_Psychosi_ALFF\validation_wholeBrain_HC_smoothed_FWHM4';
+outpath='D:\WorkStation_2018\WorkStation_2018_11_machineLearning_Psychosi_ALFF\mALFF_HC';
+method='demean';
+lc_standardization_3D(inpath,outpath,method);
+%
+inpath='D:\WorkStation_2018\WorkStation_2018_11_machineLearning_Psychosi_ALFF\validation_wholeBrain_a_smoothed_FWHM4';
+outpath='D:\WorkStation_2018\WorkStation_2018_11_machineLearning_Psychosi_ALFF\mALFF_a';
+method='demean';
+lc_standardization_3D(inpath,outpath,method);
+%
+inpath='D:\WorkStation_2018\WorkStation_2018_11_machineLearning_Psychosi_ALFF\validation_wholeBrain_noa_smoothed_FWHM4';
+outpath='D:\WorkStation_2018\WorkStation_2018_11_machineLearning_Psychosi_ALFF\mALFF_noa';
+method='demean';
+lc_standardization_3D(inpath,outpath,method);
+%
+fprintf('Done!\n');
