@@ -21,8 +21,8 @@ from sklearn.metrics import confusion_matrix
 from sklearn.metrics import classification_report
 import matplotlib.pyplot as plt
 
-import eslearn.utils.el_preprocessing as elprep
-import eslearn.utils.lc_dimreduction as dimreduction
+from eslearn.feature_engineering.feature_preprocessing import el_preprocessing
+from eslearn.feature_engineering.feature_reduction import el_dimreduction
 from eslearn.utils.lc_evaluation_model_performances import eval_performance
 
 
@@ -60,14 +60,16 @@ class SVCRFECV():
     --------
         Classification results, such as accuracy, sensitivity, specificity, AUC and figures that used to report.
     """
-    def __init__(sel,
-                 dataset_our_center_550=r'D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\dataset_550.npy',
-                 dataset_206=r'D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\dataset_206.npy',
-                 dataset_COBRE=r'D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\dataset_COBRE.npy',
-                 dataset_UCAL=r'D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\dataset_UCLA.npy',
-                 is_dim_reduction=True,
-                 components=0.95,
-                 cv=5):
+    def __init__(
+         sel,
+         dataset_our_center_550=r'D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\dataset_550.npy',
+         dataset_206=r'D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\dataset_206.npy',
+         dataset_COBRE=r'D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\dataset_COBRE.npy',
+         dataset_UCAL=r'D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\dataset_UCLA.npy',
+         is_dim_reduction=True,
+         components=0.95,
+         cv=5
+    ):
 
         sel.dataset_our_center_550 = dataset_our_center_550
         sel.dataset_206 = dataset_206
@@ -81,17 +83,18 @@ class SVCRFECV():
     def main_svc_rfe_cv(sel):
         print('Training model and testing...\n')
         # Load data
-        feature_550, label_550 = sel._load_data(sel.dataset_our_center_550)
-        feature_206, label_206 = sel._load_data(sel.dataset_206)
-        feature_COBRE, label_COBRE = sel._load_data(sel.data_COBRE)
-        feature_UCAL, label_UCAL = sel._load_data(sel.data_UCAL)
+        uid_550, feature_550, label_550 = sel._load_data(sel.dataset_our_center_550)
+        uid_206, feature_206, label_206 = sel._load_data(sel.dataset_206)
+        uid_COBRE, feature_COBRE, label_COBRE = sel._load_data(sel.data_COBRE)
+        uid_UCAL, feature_UCAL, label_UCAL = sel._load_data(sel.data_UCAL)
+        uid_all = np.concatenate([uid_550, uid_206, uid_COBRE, uid_UCAL])
         feature_all = [feature_550, feature_206, feature_COBRE, feature_UCAL]
-        label_all = [label_550, label_206, label_COBRE, label_UCAL]
+        sel.label_all = [label_550, label_206, label_COBRE, label_UCAL]
+        name = ['550','206','COBRE','UCLA']
 
         # Leave one site CV
-        n_site = len(label_all)
-        name = ['550','206','COBRE','UCLA']
-        sel.label_test_all = np.array([], dtype=np.int16)
+        n_site = len(sel.label_all)
+        test_index = np.array([], dtype=np.int16)
         sel.decision = np.array([], dtype=np.int16)
         sel.prediction = np.array([], dtype=np.int16)
         sel.accuracy = np.array([], dtype=np.float16)
@@ -102,22 +105,23 @@ class SVCRFECV():
         for i in range(n_site):
             print('-'*40)
             print(f'{i+1}/{n_site}: test dataset is {name[i]}...')
-            feature_train, label_train = feature_all.copy(), label_all.copy()
+            feature_train, label_train = feature_all.copy(), sel.label_all.copy()
             feature_test, label_test = feature_train.pop(i), label_train.pop(i)
-            sel.label_test_all = np.int16(np.append(sel.label_test_all, label_test))
             feature_train = np.concatenate(feature_train, axis=0)
             label_train = np.concatenate(label_train, axis=0)
 
             # Resampling training data
             # feature_train, label_train = sel.re_sampling(feature_train, label_train)
             # Normalization
-            prep = elprep.Preprocessing(data_preprocess_method='StandardScaler', data_preprocess_level='subject')
+            prep = el_preprocessing.Preprocessing(data_preprocess_method='StandardScaler', data_preprocess_level='subject')
             feature_train, feature_test = prep.data_preprocess(feature_train, feature_test)
 
             # Dimension reduction
             if sel.is_dim_reduction:
-                feature_train, feature_test, model_dim_reduction = sel.dimReduction(
-                    feature_train, feature_test, sel.components)
+                feature_train, feature_test, model_dim_reduction = el_dimreduction.pca_apply(
+                    feature_train, feature_test, sel.components
+                )
+
                 print(f'After dimension reduction, the feature number is {feature_train.shape[1]}')
             else:
                 print('No dimension reduction perfromed\n')
@@ -143,15 +147,19 @@ class SVCRFECV():
             sel.specificity = np.append(sel.specificity, spec)
             sel.AUC = np.append(sel.AUC, auc)
             print(f'performances = {acc, sens, spec,auc}')
+        
+        sel.label_all = np.concatenate(sel.label_all)
+        sel.special_result = np.concatenate( [uid_all, sel.label_all, sel.decision, sel.prediction], axis=0).reshape(4, -1).T
         return sel
 
     def _load_data(sel, data_path):
         data = np.load(data_path)
         name = data_path.split('\\')[-1]
         print(f"Dataset is {name}")
+        uid = data[:,0]
         feature = data[:, 2:]
         label = data[:, 1]
-        return feature, label
+        return uid, feature, label
 
     def re_sampling(sel, feature, label):
         """
@@ -189,28 +197,28 @@ class SVCRFECV():
 
     def save_fig(sel, out_name):
         # Save ROC and Classification 2D figure
-        acc, sens, spec, auc = eval_performance(sel.label_test_all, sel.prediction, sel.decision, 
+        acc, sens, spec, auc = eval_performance(sel.label_all, sel.prediction, sel.decision, 
                                                 sel.accuracy, sel.sensitivity, sel.specificity, sel.AUC,
                                                 verbose=0, is_showfig=1, legend1='HC', legend2='SSD', is_savefig=1, 
                                                 out_name=out_name)
 #
 if __name__ == '__main__':
-    sel = SVCRFECV()
-    results = sel.main_svc_rfe_cv()
+    clf = SVCRFECV()
+    results = clf.main_svc_rfe_cv()
 
-    sel.save_fig(r'D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\performances_leave_one_site_cv.pdf')
+    clf.save_fig(r'D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\performances_leave_one_site_cv.pdf')
     
     results = results.__dict__
-    sel.save_results(results, r'D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\results_leave_one_site_cv.npy')
+    clf.save_results(results, r'D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\results_leave_one_site_cv.npy')
 
-    print(np.mean(sel.accuracy))
-    print(np.std(sel.accuracy))
+    print(np.mean(clf.accuracy))
+    print(np.std(clf.accuracy))
 
-    print(np.mean(sel.sensitivity))
-    print(np.std(sel.sensitivity))
+    print(np.mean(clf.sensitivity))
+    print(np.std(clf.sensitivity))
 
-    print(np.mean(sel.specificity))
-    print(np.std(sel.specificity))
+    print(np.mean(clf.specificity))
+    print(np.std(clf.specificity))
     
-    print(np.mean(sel.AUC))
-    print(np.std(sel.AUC))
+    print(np.mean(clf.AUC))
+    print(np.std(clf.AUC))

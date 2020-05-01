@@ -1,4 +1,4 @@
-wu# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 This script is used to perform post-hoc analysis and visualization: 
 the classification performance of subsets (only for Schizophrenia Spectrum: SZ and Schizophreniform).
@@ -25,7 +25,6 @@ scale_550_file = r'D:\WorkStation_2018\SZ_classification\Scale\10-24大表.xlsx'
 scale_206_file = r'D:\WorkStation_2018\SZ_classification\Scale\北大精分人口学及其它资料\SZ_NC_108_100-WF.csv'
 scale_206_drug_file = r'D:\WorkStation_2018\SZ_classification\Scale\北大精分人口学及其它资料\SZ_109_drug.xlsx'
 headmotion_file_dataset1 = r'D:\WorkStation_2018\SZ_classification\Scale\头动参数_1322.xlsx'
-classification_results_pooling_file = r'D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\results_pooling.npy'
 classification_results_results_leave_one_site_cv_file = r'D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\results_leave_one_site_cv.npy'
 classification_results_feu_file = r'D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\results_unmedicated_and_firstepisode_550.npy'
 is_plot = 1
@@ -39,11 +38,10 @@ scale_550 = pd.merge(scale_550, headmotion_dataset1, left_on='folder', right_on=
 scale_206 = pd.read_csv(scale_206_file)
 scale_206_drug = pd.read_excel(scale_206_drug_file)
 
-results_pooling = np.load(classification_results_pooling_file, allow_pickle=True)
 results_leave_one_site_cv = np.load(classification_results_results_leave_one_site_cv_file, allow_pickle=True)
 results_feu = np.load(classification_results_feu_file, allow_pickle=True)
 
-results_special = results_pooling['special_result']
+results_special = results_leave_one_site_cv['special_result']
 results_special = pd.DataFrame(results_special)
 results_special.iloc[:, 0] = np.int32(results_special.iloc[:, 0])
 
@@ -201,10 +199,10 @@ print(f'Accuracy of drugmore of 206 = {acc_drugmore_206}')
 
 #%% -------------------------------------Visualization-----------------------------------------------
 if is_plot:
-    accuracy_pooling = results_pooling['accuracy']
-    sensitivity_pooling = results_pooling['sensitivity']
-    specificity_pooling = results_pooling['specificity']
-    AUC_pooling = results_pooling['AUC']
+    accuracy_pooling = results_leave_one_site_cv['accuracy']
+    sensitivity_pooling = results_leave_one_site_cv['sensitivity']
+    specificity_pooling = results_leave_one_site_cv['specificity']
+    AUC_pooling = results_leave_one_site_cv['AUC']
     performances_pooling = [accuracy_pooling, sensitivity_pooling, specificity_pooling, AUC_pooling]
     performances_pooling = pd.DataFrame(performances_pooling)
 
@@ -224,7 +222,7 @@ if is_plot:
     
     # Save weights to .mat file for visulazation using MATLAB.
     import scipy.io as io
-    weight_pooling_1d = np.mean(np.squeeze(np.array(results_pooling['coef'])), axis=0)
+    weight_pooling_1d = np.mean(np.squeeze(np.array(results_leave_one_site_cv['coef'])), axis=0)
     weight_leave_one_out_cv_1d = np.mean(np.squeeze(np.array(results_leave_one_site_cv['coef'])), axis=0)
     weight_feu_1d = np.mean(np.squeeze(np.array(results_feu['coef'])), axis=0)
     mask = np.triu(np.ones([246, 246]), 1) == 1
@@ -310,57 +308,14 @@ if is_plot:
     ] 
 
 
-    # Bar: Dataset 2
-    barcont_206 = [
-        acc_firstepisode_206, acc_notfirstepisode_206,
-        acc_shortduration_206, acc_longduration_206, 
-        acc_young_onsetage_206, acc_old_onsetage_206,
-        acc_drugless_206, acc_drugmore_206
-    ]
-
-    label_206 = [
-        'First episode SZ', 'Recurrent SZ', 'Short duration SZ', 'Long duration SZ',
-        'Young onset age SZ','Elder onset age SZ', 
-        'Small dosage SZ', 'Larger dosage SZ', 
-    ]
-
-    samplesize_206 = [
-        data_firstepisode_206.shape[0], data_notfirstepisode_206.shape[0],
-        data_shortduration_206.shape[0], data_longduration_206.shape[0], 
-        data_young_onsetage_206.shape[0], data_old_onsetage_206.shape[0],
-        data_drugless_206.shape[0], data_drugmore_206.shape[0]
-    ]     
-
-    mean_206 = [
-        0, 0,
-        data_shortduration_206['duration'].mean(), data_longduration_206['duration'].mean(), 
-        data_young_onsetage_206['onsetage'].mean(), data_old_onsetage_206['onsetage'].mean(),
-        data_drugless_206['CPZ_eq'].mean(), data_drugmore_206['CPZ_eq'].mean()
-    ] 
-    
-    std_206 = [
-        0, 0,
-        data_shortduration_206['duration'].std(), data_longduration_206['duration'].std(), 
-        data_young_onsetage_206['onsetage'].std(), data_old_onsetage_206['onsetage'].std(),
-        data_drugless_206['CPZ_eq'].std(), data_drugmore_206['CPZ_eq'].std()
-    ]
-
     ## Plot
-    barcont_all = barcont_206 + barcont_550
-    label_all = label_206 + label_550 
-    mean_all = mean_206 + mean_550
-    std_all = std_206 + std_550
-    samplesize_all = samplesize_206 + samplesize_550
-    color_206 = ['lightblue' for i in range(len(label_206))] 
     color_550 = ['darkturquoise' for i in range(len(label_550))]
-    # h = plt.barh(np.arange(0, len(barcont_all)), barcont_all, color=color)
-    
-    h206 = plt.barh(np.arange(0, len(barcont_206)), barcont_206, color=color_206)
-    h550 = plt.barh(np.arange(len(barcont_206), len(barcont_206) + len(barcont_550)), barcont_550, color=color_550)
-    plt.legend([h550, h206], ['Dataset 1', 'Dataset 2'], fontsize=20)
+    h550 = plt.barh(np.arange(0, len(label_550)), barcont_550, color=color_550)
+
+    samplesize = len(label_550)
     
     plt.tick_params(labelsize=20)
-    plt.yticks(np.arange(0,len(barcont_all)), label_all, fontsize=20, rotation=0)
+    plt.yticks(np.arange(0,len(barcont_550)), label_550, fontsize=20, rotation=0)
     plt.title('Sensitivity of each subgroup of SSD in dataset 1 and dateset 2', fontsize=25, fontweight='bold')
 
     x_major_locator=MultipleLocator(0.1)
@@ -372,7 +327,7 @@ if is_plot:
     plt.grid(axis='x')
     xticks = ax.get_xticks()
     yticks = ax.get_yticks()
-    for i, (y, x, n, m, s) in enumerate(zip(yticks, barcont_all, samplesize_all, mean_all, std_all)):
+    for i, (y, x, n, m, s) in enumerate(zip(yticks, barcont_550, samplesize_550, mean_550, std_550)):
         p, _, _, _ = lc_binomialtest(n, np.int(n * x), 0.5, 0.5)
         
         if m: plt.text(0.101, y-0.3, f'mean={m:.1f}({s:.1f})', fontsize=15)
@@ -393,49 +348,49 @@ if is_plot:
         pdf.close()
     plt.show()
 
-#%% Head motion
-is_savefig_headmotion = 1
+# #%% Head motion
+# is_savefig_headmotion = 1
 
-mean_meanFD_550 = [
-    data_firstepisode_SZ_550['mean FD_Power'].mean(axis=0), data_not_firstepisode_SZ_550['mean FD_Power'].mean(axis=0),
-    data_schizophreniform_550['mean FD_Power'].mean(axis=0), data_shortdurationSZ_550['mean FD_Power'].mean(axis=0), data_longdurationSZ_550['mean FD_Power'].mean(axis=0), 
-    data_young_onset_age_550['mean FD_Power'].mean(axis=0), data_old_onset_age_550['mean FD_Power'].mean(axis=0), 
-    data_medicated_SSD_550['mean FD_Power'].mean(axis=0), data_unmedicated_SSD_550['mean FD_Power'].mean(axis=0), data_unmedicated_schizophreniform_550['mean FD_Power'].mean(axis=0), 
-    data_unmedicated_SZ_550['mean FD_Power'].mean(axis=0), data_firstepisode_unmedicated_SZ_550['mean FD_Power'].mean(axis=0), data_chronic_unmedicated_SZ_550['mean FD_Power'].mean(axis=0)
-]
+# mean_meanFD_550 = [
+#     data_firstepisode_SZ_550['mean FD_Power'].mean(axis=0), data_not_firstepisode_SZ_550['mean FD_Power'].mean(axis=0),
+#     data_schizophreniform_550['mean FD_Power'].mean(axis=0), data_shortdurationSZ_550['mean FD_Power'].mean(axis=0), data_longdurationSZ_550['mean FD_Power'].mean(axis=0), 
+#     data_young_onset_age_550['mean FD_Power'].mean(axis=0), data_old_onset_age_550['mean FD_Power'].mean(axis=0), 
+#     data_medicated_SSD_550['mean FD_Power'].mean(axis=0), data_unmedicated_SSD_550['mean FD_Power'].mean(axis=0), data_unmedicated_schizophreniform_550['mean FD_Power'].mean(axis=0), 
+#     data_unmedicated_SZ_550['mean FD_Power'].mean(axis=0), data_firstepisode_unmedicated_SZ_550['mean FD_Power'].mean(axis=0), data_chronic_unmedicated_SZ_550['mean FD_Power'].mean(axis=0)
+# ]
 
-std_meanFD_550 = [
-    data_firstepisode_SZ_550['mean FD_Power'].std(), data_not_firstepisode_SZ_550['mean FD_Power'].std(),
-    data_schizophreniform_550['mean FD_Power'].std(), data_shortdurationSZ_550['mean FD_Power'].std(), data_longdurationSZ_550['mean FD_Power'].std(), 
-    data_young_onset_age_550['mean FD_Power'].std(), data_old_onset_age_550['mean FD_Power'].std(), 
-    data_medicated_SSD_550['mean FD_Power'].std(), data_unmedicated_SSD_550['mean FD_Power'].std(), data_unmedicated_schizophreniform_550['mean FD_Power'].std(), 
-    data_unmedicated_SZ_550['mean FD_Power'].std(), data_firstepisode_unmedicated_SZ_550['mean FD_Power'].std(), data_chronic_unmedicated_SZ_550['mean FD_Power'].std()
-]
+# std_meanFD_550 = [
+#     data_firstepisode_SZ_550['mean FD_Power'].std(), data_not_firstepisode_SZ_550['mean FD_Power'].std(),
+#     data_schizophreniform_550['mean FD_Power'].std(), data_shortdurationSZ_550['mean FD_Power'].std(), data_longdurationSZ_550['mean FD_Power'].std(), 
+#     data_young_onset_age_550['mean FD_Power'].std(), data_old_onset_age_550['mean FD_Power'].std(), 
+#     data_medicated_SSD_550['mean FD_Power'].std(), data_unmedicated_SSD_550['mean FD_Power'].std(), data_unmedicated_schizophreniform_550['mean FD_Power'].std(), 
+#     data_unmedicated_SZ_550['mean FD_Power'].std(), data_firstepisode_unmedicated_SZ_550['mean FD_Power'].std(), data_chronic_unmedicated_SZ_550['mean FD_Power'].std()
+# ]
   
-meanFD_550 = [
-    data_firstepisode_SZ_550['mean FD_Power'], data_not_firstepisode_SZ_550['mean FD_Power'],
-    data_schizophreniform_550['mean FD_Power'], data_shortdurationSZ_550['mean FD_Power'], data_longdurationSZ_550['mean FD_Power'], 
-    data_young_onset_age_550['mean FD_Power'], data_old_onset_age_550['mean FD_Power'], 
-    data_medicated_SSD_550['mean FD_Power'], data_unmedicated_SSD_550['mean FD_Power'], data_unmedicated_schizophreniform_550['mean FD_Power'], 
-    data_unmedicated_SZ_550['mean FD_Power'], data_firstepisode_unmedicated_SZ_550['mean FD_Power'], data_chronic_unmedicated_SZ_550['mean FD_Power']
-]
+# meanFD_550 = [
+#     data_firstepisode_SZ_550['mean FD_Power'], data_not_firstepisode_SZ_550['mean FD_Power'],
+#     data_schizophreniform_550['mean FD_Power'], data_shortdurationSZ_550['mean FD_Power'], data_longdurationSZ_550['mean FD_Power'], 
+#     data_young_onset_age_550['mean FD_Power'], data_old_onset_age_550['mean FD_Power'], 
+#     data_medicated_SSD_550['mean FD_Power'], data_unmedicated_SSD_550['mean FD_Power'], data_unmedicated_schizophreniform_550['mean FD_Power'], 
+#     data_unmedicated_SZ_550['mean FD_Power'], data_firstepisode_unmedicated_SZ_550['mean FD_Power'], data_chronic_unmedicated_SZ_550['mean FD_Power']
+# ]
 
-f, p = oneway_anova(*meanFD_550)
-ViolinPlot().plot(meanFD_550, ylabel='mean FD', ylabelsize=15, xticklabel=label_550, xticklabel_rotation=45)
-y_major_locator=MultipleLocator(0.05)
-ax = plt.gca()
-ax.yaxis.set_major_locator(y_major_locator)
-ax.spines['top'].set_visible(False)
-ax.spines['right'].set_visible(False)
-ax.spines['bottom'].set_linewidth(2)
-ax.spines['left'].set_linewidth(2)
+# f, p = oneway_anova(*meanFD_550)
+# ViolinPlot().plot(meanFD_550, ylabel='mean FD', ylabelsize=15, xticklabel=label_550, xticklabel_rotation=45)
+# y_major_locator=MultipleLocator(0.05)
+# ax = plt.gca()
+# ax.yaxis.set_major_locator(y_major_locator)
+# ax.spines['top'].set_visible(False)
+# ax.spines['right'].set_visible(False)
+# ax.spines['bottom'].set_linewidth(2)
+# ax.spines['left'].set_linewidth(2)
 
-if is_savefig_headmotion:
-    plt.tight_layout()
-    plt.subplots_adjust(left=0.25, wspace = 0.5, hspace = 0.5)  # wspace 左右
-    pdf = PdfPages(r'D:\WorkStation_2018\SZ_classification\Figure\headmotion_dataset1.pdf')
-    pdf.savefig()
-    pdf.close()
-plt.show()
+# if is_savefig_headmotion:
+#     plt.tight_layout()
+#     plt.subplots_adjust(left=0.25, wspace = 0.5, hspace = 0.5)  # wspace 左右
+#     pdf = PdfPages(r'D:\WorkStation_2018\SZ_classification\Figure\headmotion_dataset1.pdf')
+#     pdf.savefig()
+#     pdf.close()
+# plt.show()
         
 

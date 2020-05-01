@@ -12,6 +12,8 @@ Dimension reduction: PCA
 @author: LI Chao
 Email: lichao19870617@gmail.com
 """
+
+
 import sys
 import numpy as np
 from sklearn import svm
@@ -216,10 +218,12 @@ class PCASVCPooling():
             
     def save_fig(sel, out_name):
         # Save ROC and Classification 2D figure
-        acc, sens, spec, auc = eval_performance(sel.label_test_all, sel.prediction, sel.decision, 
-                                                sel.accuracy, sel.sensitivity, sel.specificity, sel.AUC,
-                                                verbose=0, is_showfig=1, legend1='HC', legend2='SZ', is_savefig=1, 
-                                                out_name=out_name)
+        (acc, sens, spec, auc) = eval_performance(
+            sel.label_all, sel.prediction, sel.decision, 
+            sel.accuracy, sel.sensitivity, sel.specificity, sel.AUC,
+            verbose=0, is_showfig=1, legend1='HC', legend2='SZ', is_savefig=1, 
+            out_name=out_name
+        )
 #
 if __name__ == '__main__':
     sel=PCASVCPooling()
