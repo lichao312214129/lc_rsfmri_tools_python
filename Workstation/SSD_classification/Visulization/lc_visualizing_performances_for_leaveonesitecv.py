@@ -69,133 +69,62 @@ RAISE early treatment program. Am J Psychiatry. 2016;173(4):362-372. doi:10.1176
 2. Cognitive Impairment in Never-Medicated Individuals on the Schizophrenia Spectrum. doi:10.1001/jamapsychiatry.2020.0001"
 """
 
-data_firstepisode_SZ_550 = scale_550_selected[(scale_550_selected['诊断']==3) & (scale_550_selected['首发'] == 1) & (scale_550_selected['病程月'] <= duration) & (scale_550_selected['病程月'] >= 6)]
-data_not_firstepisode_SZ_550 = scale_550_selected[(scale_550_selected['诊断']==3) & ((scale_550_selected['首发'] == 0) | (scale_550_selected['病程月'] > duration))]  # Including the persistent patients
-
-data_schizophreniform_550 = scale_550_selected[(scale_550_selected['诊断']==3) & (scale_550_selected['病程月'] < 6)]
-data_shortdurationSZ_550 = scale_550_selected[(scale_550_selected['诊断']==3) & (scale_550_selected['病程月'] <= duration) & (scale_550_selected['病程月'] >= 6)]
-data_longdurationSZ_550 = scale_550_selected[(scale_550_selected['诊断']==3) & (scale_550_selected['病程月'] > duration)]
-
-onsetage_all_550 = scale_550_selected['Age_of_first_episode'][scale_550_selected['诊断']==3].dropna()
-ind_young_onsetage_550 = onsetage_all_550.index[onsetage_all_550.values <= np.median(onsetage_all_550)]
-ind_old_onsetage_550 = onsetage_all_550.index[onsetage_all_550.values > np.median(onsetage_all_550)]
-data_young_onset_age_550 = scale_550_selected[scale_550_selected['诊断']==3].loc[ind_young_onsetage_550]
-data_old_onset_age_550 = scale_550_selected[scale_550_selected['诊断']==3].loc[ind_old_onsetage_550]
-
-data_medicated_SSD_550 = scale_550_selected[(scale_550_selected['诊断']==3) & (scale_550_selected['用药'] == 1)]
-data_unmedicated_SSD_550 = scale_550_selected[(scale_550_selected['诊断']==3) & (scale_550_selected['用药'] == 0) ]
-
-# Frist episode and unmedicated
-data_unmedicated_schizophreniform_550 = scale_550_selected[
+# Frist episode unmedicated; first episode medicated; chronic medicated
+data_firstepisode_unmedicated_SSD_550 = scale_550_selected[
     (scale_550_selected['诊断']==3) & 
-    (scale_550_selected['病程月'] < 6) & 
+    (scale_550_selected['首发'] == 1) &
+    (scale_550_selected['病程月'] <= duration) & 
     (scale_550_selected['用药'] == 0)
 ]
 
-data_unmedicated_SZ_550 = scale_550_selected[
+data_firstepisode_medicated_SSD_550 = scale_550_selected[
     (scale_550_selected['诊断']==3) & 
-    (scale_550_selected['病程月'] >= 6) & 
-    (scale_550_selected['用药'] == 0)
+    (scale_550_selected['首发'] == 1) &
+    (scale_550_selected['病程月'] <= duration) & 
+    (scale_550_selected['用药'] == 1)
 ]
 
-data_firstepisode_unmedicated_SZ_550 = scale_550_selected[
+data_firstepisode_medicated_SZ_550 = scale_550_selected[
     (scale_550_selected['诊断']==3) & 
     (scale_550_selected['首发'] == 1) &
     (scale_550_selected['病程月'] <= duration) & 
     (scale_550_selected['病程月'] >= 6) & 
+    (scale_550_selected['用药'] == 1)
+]
+
+data_chronic_medicated_SSD_550 = scale_550_selected[
+    (scale_550_selected['诊断']==3) & 
+    (scale_550_selected['病程月'] > duration) & 
+    (scale_550_selected['用药'] == 1)
+]
+
+data_unmedicated_SSD_550 = scale_550_selected[
+    (scale_550_selected['诊断']==3) & 
     (scale_550_selected['用药'] == 0)
 ]
 
-data_chronic_unmedicated_SZ_550 = scale_550_selected[
+data_medicated_SSD_550 = scale_550_selected[
     (scale_550_selected['诊断']==3) & 
-    (scale_550_selected['病程月'] > duration) & 
-    (scale_550_selected['用药'] == 0)
+    (scale_550_selected['用药'] == 1)
 ]
+
 
 # data_unmedicated_SSD_550['folder'].to_csv(r'D:\WorkStation_2018\WorkStation_CNN_Schizo\Scale\feu_63.txt', index=False)
 
 ## Calculating Accuracy
-acc_firstepisode_SZ_550 = np.sum(data_firstepisode_SZ_550[1]-data_firstepisode_SZ_550[3]==0)/len(data_firstepisode_SZ_550)
-acc_not_firstepisode_SZ_550 = np.sum(data_not_firstepisode_SZ_550[1]-data_not_firstepisode_SZ_550[3]==0)/len(data_not_firstepisode_SZ_550)
+acc_first_episode_unmedicated_SSD_550 = np.sum(data_firstepisode_unmedicated_SSD_550[1]-data_firstepisode_unmedicated_SSD_550[3]==0) / len(data_firstepisode_unmedicated_SSD_550)
+acc_firstepisode_medicated_SSD_550 = np.sum(data_firstepisode_medicated_SSD_550[1]-data_firstepisode_medicated_SSD_550[3]==0) / len(data_firstepisode_medicated_SSD_550)
+acc_firstepisode_medicated_SZ_550 = np.sum(data_firstepisode_medicated_SZ_550[1]-data_firstepisode_medicated_SZ_550[3]==0) / len(data_firstepisode_medicated_SZ_550)
+acc_unmedicated_SSD_550 = np.sum(data_unmedicated_SSD_550[1]-data_unmedicated_SSD_550[3]==0) / len(data_unmedicated_SSD_550)
+acc_medicated_SSD_550 = np.sum(data_medicated_SSD_550[1]-data_medicated_SSD_550[3]==0) / len(data_medicated_SSD_550)
+acc_chronic_medicated_SSD_550 = np.sum(data_chronic_medicated_SSD_550[1]-data_chronic_medicated_SSD_550[3]==0) / len(data_chronic_medicated_SSD_550)
+acc_all_SSD_550 = np.sum(scale_550_selected[1]-scale_550_selected[3]==0) / len(scale_550_selected)
 
-acc_schizophreniform_550 = np.sum(data_schizophreniform_550[1]-data_schizophreniform_550[3]==0)/len(data_schizophreniform_550)
-acc_shortduration_550 = np.sum(data_shortdurationSZ_550[1]-data_shortdurationSZ_550[3]==0)/len(data_shortdurationSZ_550)
-acc_longduration_550 = np.sum(data_longdurationSZ_550[1]-data_longdurationSZ_550[3]==0)/len(data_longdurationSZ_550)
-
-acc_young_onsetage_550 = np.sum(data_young_onset_age_550[1]-data_young_onset_age_550[3]==0)/len(data_young_onset_age_550)
-acc_old_onsetage_550 = np.sum(data_old_onset_age_550[1]-data_old_onset_age_550[3]==0)/len(data_old_onset_age_550)
-
-acc_medicated_SSD_550 = np.sum(data_medicated_SSD_550[1]-data_medicated_SSD_550[3]==0)/len(data_medicated_SSD_550)
-acc_ummedicated_SSD_550 = np.sum(data_unmedicated_SSD_550[1]-data_unmedicated_SSD_550[3]==0)/len(data_unmedicated_SSD_550)
-
-acc_unmedicated_schizophreniform_550 = np.sum(data_unmedicated_schizophreniform_550[1]-data_unmedicated_schizophreniform_550[3]==0) / len(data_unmedicated_schizophreniform_550)
-acc_unmedicated_SZ_550 = np.sum(data_unmedicated_SZ_550[1]-data_unmedicated_SZ_550[3]==0) / len(data_unmedicated_SZ_550)
-acc_firstepisode_unmedicated_SZ_550 = np.sum(data_firstepisode_unmedicated_SZ_550[1]-data_firstepisode_unmedicated_SZ_550[3]==0) / len(data_firstepisode_unmedicated_SZ_550)
-acc_chronic_unmedicated_SZ_550 = np.sum(data_chronic_unmedicated_SZ_550[1]-data_chronic_unmedicated_SZ_550[3]==0) / len(data_chronic_unmedicated_SZ_550)
-
-print(f'Accuracy of firstepisode in dataset550 = {acc_firstepisode_SZ_550}')
-print(f'Accuracy of none-firstepisode in dataset550 = {acc_not_firstepisode_SZ_550}')
-
-print(f'Accuracy of schizophreniform in dataset550 = {acc_schizophreniform_550}')
-print(f'Accuracy of shortduration in dataset550 = {acc_shortduration_550}')
-print(f'Accuracy of longduration in dataset550 = {acc_longduration_550}')
-
-print(f'Accuracy of young onsetage of 550 = {acc_young_onsetage_550}')
-print(f'Accuracy of old onsetage of 550 = {acc_old_onsetage_550}')
-
-print(f'Accuracy of medicated SSD in dataset550 = {acc_medicated_SSD_550}')
-print(f'Accuracy of ummedicated_SSD in dataset550 = {acc_ummedicated_SSD_550}')
-
-print(f'Accuracy of firstepisode unmedicated SZ in dataset550 = {acc_firstepisode_unmedicated_SZ_550}')
+print(f'Sensitivity of firste pisode unmedicated in dataset550 = {acc_first_episode_unmedicated_SSD_550}')
+print(f'Sensitivity of first episode medicated in dataset550 = {acc_firstepisode_medicated_SSD_550}')
+print(f'Sensitivity of chronic medicated in dataset550 = {acc_chronic_medicated_SSD_550}')
+print(f'Sensitivity of all SSD in dataset550 = {acc_all_SSD_550}')
 print('-'*50)
-
-# Step 2: Dataset 2
-## Preprocessing
-scale_206_selected['duration'] = [np.int32(duration) if duration != ' ' else 10000 for duration in scale_206_selected['duration']]
-scale_206_selected['firstepisode'] = [np.int32(firstepisode) if firstepisode != ' ' else 10000 for firstepisode in scale_206_selected['firstepisode']]
-scale_206_selected['CPZ_eq'] = [np.int32(duration) if duration != ' ' else 0 for duration in scale_206_selected['CPZ_eq']]
-scale_206_selected['onsetage'] = [np.int32(duration) if duration != ' ' else 0 for duration in scale_206_selected['onsetage']]
-
-## Filter subgroups
-data_firstepisode_206 = scale_206_selected[(scale_206_selected['group']==1) & (scale_206_selected['firstepisode'] == 1) & (scale_206_selected['duration'] <= duration)]
-data_notfirstepisode_206 = scale_206_selected[(scale_206_selected['group']==1) & ((scale_206_selected['firstepisode'] == 0) | (scale_206_selected['duration'] > duration))]
-
-data_shortduration_206 = scale_206_selected[(scale_206_selected['group']==1) & (scale_206_selected['duration'] <= duration)]
-data_longduration_206 = scale_206_selected[(scale_206_selected['group']==1) & (scale_206_selected['duration'] > duration)]
-
-onsetage = scale_206_selected['onsetage'][scale_206_selected['group']==1]
-data_young_onsetage_206 = scale_206_selected[(scale_206_selected['group']==1) & (onsetage <= np.median(onsetage))]
-data_old_onsetage_206 = scale_206_selected[(scale_206_selected['group']==1) & (onsetage > np.median(onsetage))]
-
-CPZ_eq = scale_206_selected['CPZ_eq'][scale_206_selected['group']==1]
-data_drugless_206 = scale_206_selected[(scale_206_selected['group']==1) & (CPZ_eq <= np.median(CPZ_eq))]
-data_drugmore_206 = scale_206_selected[(scale_206_selected['group']==1) & (CPZ_eq > np.median(CPZ_eq))]
-
-## Calculating acc
-acc_firstepisode_206 = np.sum(data_firstepisode_206[1]-data_firstepisode_206[3]==0)/len(data_firstepisode_206)
-acc_notfirstepisode_206 = np.sum(data_notfirstepisode_206[1]-data_notfirstepisode_206[3]==0)/len(data_notfirstepisode_206)
-
-acc_shortduration_206 = np.sum(data_shortduration_206[1]-data_shortduration_206[3]==0)/len(data_shortduration_206)
-acc_longduration_206 = np.sum(data_longduration_206[1]-data_longduration_206[3]==0)/len(data_longduration_206)
-
-acc_young_onsetage_206 = np.sum(data_young_onsetage_206[1]-data_young_onsetage_206[3]==0)/len(data_young_onsetage_206)
-acc_old_onsetage_206 = np.sum(data_old_onsetage_206[1]-data_old_onsetage_206[3]==0)/len(data_old_onsetage_206)
-
-acc_drugless_206 = np.sum(data_drugless_206[1]-data_drugless_206[3]==0)/len(data_drugless_206)
-acc_drugmore_206 = np.sum(data_drugmore_206[1]-data_drugmore_206[3]==0)/len(data_drugmore_206)
-
-##
-print(f'Accuracy of first episode of 206 = {acc_firstepisode_206}')
-print(f'Accuracy of recurrent of 206 = {acc_notfirstepisode_206}')
-
-print(f'Accuracy of shortduration of 206 = {acc_shortduration_206}')
-print(f'Accuracy of longduration of 206 = {acc_longduration_206}')
-
-print(f'Accuracy of young onsetage of 206 = {acc_young_onsetage_206}')
-print(f'Accuracy of old onsetage of 206 = {acc_old_onsetage_206}')
-
-print(f'Accuracy of drugless of 206 = {acc_drugless_206}')
-print(f'Accuracy of drugmore of 206 = {acc_drugmore_206}')
 
 #%% -------------------------------------Visualization-----------------------------------------------
 if is_plot:
