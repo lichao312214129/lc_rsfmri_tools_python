@@ -2,8 +2,6 @@
 """
 Created on Wed sel.decision  5 21:12:49 2018
 @author: LI Chao
-new: 函数统一返回给sel
-new: add function of LOOCV
 """
 
 import sys
@@ -33,15 +31,16 @@ class SVCRfeCv(object):
        大的训练集，测试集同样如此。因此，K参数不能大于数量较少的那个类别
        （比如病人这一类别的样本量是50，正常类是40，那么K不能大于40，且当K=40时，将执行LOOCV）
 
-Attributes:
-             outer_k=3:outer_k-fold
-             step=0.1: rfe step 10%
-             num_jobs=1: parallel
-             scale_method='StandardScaler':standardization method
-             pca_n_component=0.9
-             permutation=0
-Returns:
-            各种分类效果等
+    Parameters:
+    ----------
+                 outer_k=3:outer_k-fold
+                 step=0.1: rfe step 10%
+                 num_jobs=1: parallel
+                 scale_method='StandardScaler':standardization method
+                 pca_n_component=0.9
+                 permutation=0
+    Returns:
+                各种分类效果等
     """
 
     def __init__(sel,

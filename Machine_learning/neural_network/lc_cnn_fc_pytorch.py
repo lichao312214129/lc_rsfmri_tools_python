@@ -1,10 +1,13 @@
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
-"""
+""" CNN for functional connectivity network
+
 Created on Mon Jul 15 15:04:21 2019
-This script is used to training a convolutional neural network,
-then validate and test this model using validation and test data
-@author: Li Chao
-Email: lichao19870617@gmail.com
+This script is used to training validate and test a convolutional neural networ, finally using test data to test the model.
+Validation data is used to optimize the super parameters. Test data must be used only once.
+@author: Li Chao <lichao19870617@gmail.com>
+If you think this code is useful, citing the easylearn software in your paper or code would be greatly appreciated!
+Citing link: https://github.com/easylearn-fmri/easylearn  
 """
 
 import os
@@ -48,6 +51,7 @@ class Utils():
 	"""
 	Utilits for preprocessing data
 	"""
+
 	def __init__(self):
 	    self.train_data_path = r'D:\WorkStation_2018\WorkStation_CNN_Schizo\Data\oldCNNdata\data\x_train304.npy'
 	    self.label_train_path = r'D:\WorkStation_2018\WorkStation_CNN_Schizo\Data\oldCNNdata\data\y_train304.npy'
@@ -59,9 +63,9 @@ class Utils():
 	    self.test_label_path = r'D:\WorkStation_2018\WorkStation_CNN_Schizo\Data\oldCNNdata\data\y_test206.npy'
 
 	def load_data(self):
+	    """Load data and label
 	    """
-	    Load data and label
-	    """
+
 	    data_train = np.load(self.train_data_path)
 	    label_train = np.load(self.label_train_path)[:, 1]
 
@@ -162,7 +166,7 @@ class Utils():
 		return accuracy, sensitivity, specificity, auc_score
 
 
-	def plor_roc(self, real_label, predict_label,is_savefig=0, fig_savepath=os.getcwd, fig_savename = 'ROC.tif'):
+	def plot_roc(self, real_label, predict_label,is_savefig=0, fig_savepath=os.getcwd, fig_savename = 'ROC.tif'):
 	    """
 	    plot ROC and return the best threshold
 	    """    
@@ -351,7 +355,7 @@ class TrainTest(Utils):
 	    _, predicted = torch.max(output.data, 1)
 	    accuracy, sensitivity, specificity, auc_score = self.eval_prformance(label, predicted, output.data)
 	    
-	    best_thresh = self.plor_roc(label, output.data[:,1], is_savefig=is_savefig,fig_savepath=fig_savepath, fig_savename='ROC_val.tif')
+	    best_thresh = self.plot_roc(label, output.data[:,1], is_savefig=is_savefig,fig_savepath=fig_savepath, fig_savename='ROC_val.tif')
 	                
 	    return accuracy, sensitivity, specificity, auc_score, best_thresh
 
@@ -366,7 +370,7 @@ class TrainTest(Utils):
 	    predict = np.array([np.int(predict_) for predict_ in predict])
 	    accuracy, sensitivity, specificity, auc = self.eval_prformance(label, predict, output.data)
 	#    confusionmatrix = confusion_matrix(label, predict)
-	    self.plor_roc(label, output.data[:,1], is_savefig=is_savefig, fig_savepath=fig_savepath, fig_savename='ROC_test.tif')
+	    self.plot_roc(label, output.data[:,1], is_savefig=is_savefig, fig_savepath=fig_savepath, fig_savename='ROC_test.tif')
 
 	    return accuracy, sensitivity, specificity, auc
 
