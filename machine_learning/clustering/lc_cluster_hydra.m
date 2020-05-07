@@ -25,7 +25,8 @@ function cluster_hydra_for_zhangyue(varargin)
 %       subtype_index: cell array, each cell contains a index of one cluster
 % EXAMPLE:
 % cluster_hydra_for_zhangyue('-pd', 'D:\workstation_b\ZhangYue_Guangdongshengzhongyiyuan\data_clustering\p',...
-%                           '-hd', 'D:\workstation_b\ZhangYue_Guangdongshengzhongyiyuan\data_clustering\c', '-ft', 'fc',...
+%                           '-hd', 'D:\workstation_b\ZhangYue_Guangdongshengzhongyiyuan\data_clustering\c', 
+%                           '-ft', 'fc',...
 %                           '-od', 'D:\workstation_b\ZhangYue_Guangdongshengzhongyiyuan\data_clustering',...
 %                           '-pcf', 'D:\workstation_b\ZhangYue_Guangdongshengzhongyiyuan\data_clustering\patient_cov.csv',...
 %                           '-hcf', 'D:\workstation_b\ZhangYue_Guangdongshengzhongyiyuan\data_clustering\hc_cov.csv'))
@@ -39,16 +40,13 @@ function cluster_hydra_for_zhangyue(varargin)
 %   Email: lichao19870617@gmail.com
 
 
-% DEBUG
+% HELP
 if nargin == 0
     help cluster_hydra_for_zhangyue
     return
 end
 
 % Init
-
-
-
 patient_dir = '';
 hc_dir = '';
 feature_type = '';  % 'fc' OR 'nii'
