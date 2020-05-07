@@ -20,10 +20,8 @@ function cluster_hydra_for_zhangyue(varargin)
 %           [--output_dir, -od]: output directory, default is current working directory
 %
 % OUTPUT:
-%       CIDX: sub-clustering assignments of the disease population (positive
-%           class).
-%       ARI: adjusted rand index measuring the overlap/reproducibility of
-%           clustering solutions across folds
+%       CIDX: sub-clustering assignments of the disease population (positive class).
+%       ARI: adjusted rand index measuring the overlap/reproducibility of clustering solutions across folds
 %       subtype_index: cell array, each cell contains a index of one cluster
 % EXAMPLE:
 % cluster_hydra_for_zhangyue('-pd', 'D:\workstation_b\ZhangYue_Guangdongshengzhongyiyuan\data_clustering\p',...
@@ -48,6 +46,9 @@ if nargin == 0
 end
 
 % Init
+
+
+
 patient_dir = '';
 hc_dir = '';
 feature_type = '';  % 'fc' OR 'nii'
