@@ -296,6 +296,7 @@ end
 save( fullfile(output_dir, 'subtype_index.mat'), 'subtype_index');
 end
 
+%%
 function [CIDX,ARI] = hydra(varargin)
 %  HYDRA
 %  Version 1.0.0 --- January 2018
