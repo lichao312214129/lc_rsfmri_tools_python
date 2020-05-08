@@ -24,8 +24,8 @@ function cluster_hydra_for_zhangyue(varargin)
 %       ARI: adjusted rand index measuring the overlap/reproducibility of clustering solutions across folds
 %       subtype_index: cell array, each cell contains a index of one cluster
 % EXAMPLE:
-% cluster_hydra_for_zhangyue('-pd', 'D:\workstation_b\ZhangYue_Guangdongshengzhongyiyuan\data_clustering\Patient',...
-%                           '-hd', 'D:\workstation_b\ZhangYue_Guangdongshengzhongyiyuan\data_clustering\HC',... 
+% cluster_hydra_for_zhangyue('-pd', 'D:\workstation_b\ZhangYue_Guangdongshengzhongyiyuan\data_clustering\p',...
+%                           '-hd', 'D:\workstation_b\ZhangYue_Guangdongshengzhongyiyuan\data_clustering\c',... 
 %                           '-ft', 'fc',...
 %                           '-od', 'D:\workstation_b\ZhangYue_Guangdongshengzhongyiyuan\data_clustering',...
 %                           '-pcf', 'D:\workstation_b\ZhangYue_Guangdongshengzhongyiyuan\data_clustering\patient_cov.csv',...
@@ -58,8 +58,8 @@ output_dir = pwd;
 is_pca = 1;  
 explained_cov = 0.95; 
 min_clustering_solutions = 1; 
-max_clustering_solutions = 3; 
-cvfold = 3; 
+max_clustering_solutions = 5; 
+cvfold = 5; 
 
 % Varargin parser
 if( sum(or(strcmpi(varargin,'--patient_dir'),strcmpi(varargin,'-pd')))==1)
@@ -146,13 +146,17 @@ end
 % Load cov
 if ~strcmp(patient_cov_file, '')
     patient_cov = importdata(patient_cov_file);
-    patient_cov = patient_cov.data;
+    if isstruct(patient_cov)
+        patient_cov = patient_cov.data;
+    end
 else
     patient_cov = [];
 end
 if ~strcmp(hc_cov_file, '')
     hc_cov = importdata(hc_cov_file);
-    hc_cov = hc_cov.data;
+    if isstruct(hc_cov)
+        hc_cov = hc_cov.data; 
+    end
 else
     hc_cov = [];
 end
@@ -183,13 +187,13 @@ if  (~all(size(mask) == size(d_tmp_hc)))
     return;
 end
 
-if length(patient_cov) ~= length(num_patient)
-    error('Number of covariates is not match number of patients!');
+if length(patient_cov) ~= num_patient
+    error('Number of patient covariates is not match number of patients!');
     return;
 end
 
-if length(hc_cov) ~= length(num_hc)
-    error('Number of covariates is not match number of hc!');
+if length(hc_cov) ~= num_hc
+    error('Number of hc covariates is not match number of hc!');
     return;
 end
 
