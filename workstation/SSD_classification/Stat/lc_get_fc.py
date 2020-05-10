@@ -7,7 +7,7 @@ import sys
 import numpy as np
 import pandas as pd
 import scipy.io as sio
-from lc_calc_cohen_d_effective_size import CohenEffectSize
+from eslearn.statistical_analysis.lc_calc_cohen_d_effective_size import CohenEffectSize
 
 # Inputs
 is_save = 1
@@ -18,11 +18,10 @@ cov_firstepisode_unmedicated = r'D:\WorkStation_2018\SZ_classification\Scale\cov
 
 # Load all dataset
 dataset = np.load(dataset1_file)
-dataset_our_center_550 = np.load(sel.dataset_our_center_550)
 
-cov_chronic = pd.read_csv(cov_chronic)
-cov_firstepisode_medicated = pd.read_csv(cov_firstepisode_medicated)
-cov_firstepisode_unmedicated =pd.read_csv(cov_firstepisode_unmedicated)
+cov_chronic = pd.read_csv(cov_chronic).dropna()
+cov_firstepisode_medicated = pd.read_csv(cov_firstepisode_medicated).dropna()
+cov_firstepisode_unmedicated =pd.read_csv(cov_firstepisode_unmedicated).dropna()
 
 # Extract corr data
 merged_data_cov_chronic = pd.merge(pd.DataFrame(dataset), cov_chronic, left_on=0, right_on='folder')
@@ -55,6 +54,10 @@ if is_save:
     sio.savemat(r'D:\WorkStation_2018\SZ_classification\Data\cohen_duration.mat', {'cohen_duration': cohen_duration_full})
     sio.savemat(r'D:\WorkStation_2018\SZ_classification\Data\cohen_medication.mat', {'cohen_medication': cohen_medication_full})
 
-    sio.savemat(r'D:\WorkStation_2018\SZ_classification\Data\fc_chronic.mat', {'fc_chronic': fc_chronic})
-    sio.savemat(r'D:\WorkStation_2018\SZ_classification\Data\fc_firstepisode_medicated.mat', {'fc_firstepisode_medicated': fc_firstepisode_medicated})
-    sio.savemat(r'D:\WorkStation_2018\SZ_classification\Data\fc_firstepisode_unmedicated.mat', {'fc_firstepisode_unmedicated': fc_firstepisode_medicated})
+    sio.savemat(r'D:\WorkStation_2018\SZ_classification\Data\fc_chronic.mat', {'fc_chronic': fc_chronic.values})
+    sio.savemat(r'D:\WorkStation_2018\SZ_classification\Data\fc_firstepisode_medicated.mat', {'fc_firstepisode_medicated': fc_firstepisode_medicated.values})
+    sio.savemat(r'D:\WorkStation_2018\SZ_classification\Data\fc_firstepisode_unmedicated.mat', {'fc_firstepisode_unmedicated': fc_firstepisode_unmedicated.values})
+
+    sio.savemat(r'D:\WorkStation_2018\SZ_classification\Data\cov_chronic.mat', {'cov_chronic': cov_chronic.values})
+    sio.savemat(r'D:\WorkStation_2018\SZ_classification\Data\cov_firstepisode_medicated.mat', {'cov_firstepisode_medicated': cov_firstepisode_medicated.values})
+    sio.savemat(r'D:\WorkStation_2018\SZ_classification\Data\cov_firstepisode_unmedicated.mat', {'cov_firstepisode_unmedicated': cov_firstepisode_unmedicated.values})
