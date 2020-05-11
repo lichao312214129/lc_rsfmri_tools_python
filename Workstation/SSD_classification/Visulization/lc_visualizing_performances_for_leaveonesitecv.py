@@ -17,7 +17,9 @@ import seaborn as sns
 from lc_binomialtest import lc_binomialtest
 from eslearn.statistical_analysis.lc_anova import oneway_anova
 from eslearn.statistical_analysis.lc_chisqure import lc_chisqure
+from eslearn.statistical_analysis.lc_ttest2 import ttest2
 from eslearn.visualization.el_violine import ViolinPlotMatplotlib
+from eslearn.utils.lc_evaluation_model_performances import eval_performance
 
 #%% Inputs
 scale_550_file = r'D:\WorkStation_2018\SZ_classification\Scale\10-24大表.xlsx'
@@ -78,10 +80,7 @@ acc_first_episode_unmedicated_SSD_550 = np.sum(data_firstepisode_unmedicated_SSD
 acc_firstepisode_medicated_SSD_550 = np.sum(data_firstepisode_medicated_SSD_550[1]-data_firstepisode_medicated_SSD_550[3]==0) / len(data_firstepisode_medicated_SSD_550)
 acc_all_SSD_550 = np.sum(scale_550_selected[1]-scale_550_selected[3]==0) / len(scale_550_selected)
 
-print(f'Sensitivity of firste pisode unmedicated in dataset550 = {acc_first_episode_unmedicated_SSD_550}')
-print(f'Sensitivity of first episode medicated in dataset550 = {acc_firstepisode_medicated_SSD_550}')
-print(f'Sensitivity of chronic medicated in dataset550 = {acc_chronic_medicated_SSD_550}')
-print(f'Sensitivity of all SSD in dataset550 = {acc_all_SSD_550}')
+eval_performance(scale_550_selected[1].values, scale_550_selected[3].values, scale_550_selected[2].values)
 print('-'*50)
 
 # Extract subjects' demographic data
@@ -148,4 +147,8 @@ pdf.savefig()
 pdf.close()
 plt.show()
 
+# plt.figure(figsize=(10,5))
+# sns.distplot(scale_550_selected[2][scale_550_selected[1]==1])
+# sns.distplot(scale_550_selected[2][scale_550_selected[1]==0])
+# ttest2(scale_550_selected[2][scale_550_selected[1]==1], scale_550_selected[2][scale_550_selected[1]==0])
 

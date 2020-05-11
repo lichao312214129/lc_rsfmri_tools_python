@@ -43,7 +43,7 @@ caxis([-8 8])
 axis square
 
 % Save
-% saveas(gcf, 'D:\WorkStation_2018\SZ_classification\Figure\tvalue_medication_effect_cb.pdf');
+saveas(gcf, 'D:\WorkStation_2018\SZ_classification\Figure\tvalue_medication_effect.pdf');
 
 
 function meanFC = get_average_diff(diff, netidx)

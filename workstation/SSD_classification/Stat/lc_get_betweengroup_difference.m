@@ -24,23 +24,6 @@ load(fc_chronic);
 load(fc_firstepisode_medicated);
 load(fc_firstepisode_unmedicated);
 
-% Y
-y = cat(1, fc_chronic, fc_firstepisode_medicated, fc_firstepisode_unmedicated);
-
-% Group
-group = cat(1, ones(length(cov_chronic), 1), ones(length(cov_firstepisode_medicated), 1)+1, ones(length(cov_firstepisode_unmedicated), 1)+2);
-group_design = zeros(length(group), 3);
-n_g = size(group_design, 2);
-for i =  1:n_g
-    group_design(:,i) = group == i;
-end
-
-% Cov
-cov_all = cat(1, cov_chronic, cov_firstepisode_medicated, cov_firstepisode_unmedicated);
-cov_all = cov_all(:,1:end-1);
-
-% Design matrix
-design_mat = cat(2, group_design, cov_all);
 
 % NBS parameters
 STATS.thresh = 3;
@@ -48,19 +31,50 @@ STATS.alpha = 0.025;  % Equal to two-tailed 0.05.
 STATS.N = 246;
 STATS.size = 'extent';
 GLM.perms = 1000;
-GLM.X = design_mat;
 GLM.y = y;
 GLM.test = 'ttest'; 
 
-% Duration
-GLM.contrast = [1 -1 0 0 0 0 0 0];
-[test_stat_duration, pvalues]=NBSglm(GLM);
+%% Duration
+y = cat(1, fc_chronic, fc_firstepisode_medicated);
+group = cat(1, ones(length(cov_chronic), 1), ones(length(cov_firstepisode_medicated), 1)+1);
+group_design = zeros(length(group), 2);
+n_g = size(group_design, 2);
+for i =  1:n_g
+    group_design(:,i) = group == i;
+end
+% Cov
+cov_all = cat(1,  cov_chronic, cov_firstepisode_medicated);
+cov_duration = cov_all(:,2:end-1);
+
+design_mat = cat(2, group_design, cov_duration);
+
+GLM.X = design_mat;
+GLM.y = y;
+GLM.perms = 1000;
+GLM.contrast = [1 -1 0 0 0 0];
+[test_stat_duration, pvalues_duration]=NBSglm(GLM);
 STATS.test_stat = abs(test_stat_duration);  % two-tailed
 [n_cnt_duration, cont_duration, pval_duration] = NBSstats(STATS);
 
-% Medication
+%% Medication
+y = cat(1, fc_firstepisode_medicated, fc_firstepisode_unmedicated);
+
+group = cat(1, ones(length(cov_firstepisode_medicated), 1), ones(length(cov_firstepisode_unmedicated), 1)+1);
+group_design = zeros(length(group), 2);
+n_g = size(group_design, 2);
+for i =  1:n_g
+    group_design(:,i) = group == i;
+end
+% Cov
+cov_all = cat(1,  cov_firstepisode_medicated, cov_firstepisode_unmedicated);
+cov_medication = cov_all(:,1:end-1);
+
+design_mat = cat(2, group_design, cov_medication);
+
+GLM.X = design_mat;
+GLM.y = y;
 GLM.perms = 1000;
-GLM.contrast = [0 1 -1 0 0 0 0 0];
+GLM.contrast = [1 -1 0 0 0 0 0];
 [test_stat_medication, pvalues_medication]=NBSglm(GLM);
 STATS.test_stat = abs(test_stat_medication);  % two-tailed
 [n_cnt_medication, cont_medication, pval_medication] = NBSstats(STATS);
