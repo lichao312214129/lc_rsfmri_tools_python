@@ -45,7 +45,7 @@ scale_550_selected = pd.merge(results_special, scale_550, left_on=0, right_on='f
 
 #%% Calculate performance for Schizophrenia Spectrum subgroups
 ## Step 1: Dataset1
-duration = 18  # Upper limit of first episode: 
+duration = 24  # Upper limit of first episode: 
 """ reference:
 1. Kane JM, Robinson DG, Schooler NR, et al. Comprehensive versus usual
 community care for first-episode psychosis: 2-year outcomes from the NIMH
@@ -54,20 +54,18 @@ RAISE early treatment program. Am J Psychiatry. 2016;173(4):362-372. doi:10.1176
 """
 
 # Frist episode unmedicated; first episode medicated; chronic medicated
-data_chronic_medicated_SSD_550 = scale_550_selected[
+data_chronic_medicated_SSD_550_24 = scale_550_selected[
     (scale_550_selected['诊断']==3) & 
     (scale_550_selected['病程月'] > duration) & 
     (scale_550_selected['用药'] == 1)
 ]
-
-data_firstepisode_medicated_SSD_550 = scale_550_selected[
+data_firstepisode_medicated_SSD_550_24 = scale_550_selected[
     (scale_550_selected['诊断']==3) & 
     (scale_550_selected['首发'] == 1) &
     (scale_550_selected['病程月'] <= duration) & 
     (scale_550_selected['用药'] == 1)
 ]
-
-data_firstepisode_unmedicated_SSD_550 = scale_550_selected[
+data_firstepisode_unmedicated_SSD_550_24 = scale_550_selected[
     (scale_550_selected['诊断']==3) & 
     (scale_550_selected['首发'] == 1) &
     (scale_550_selected['病程月'] <= duration) & 
@@ -75,18 +73,165 @@ data_firstepisode_unmedicated_SSD_550 = scale_550_selected[
 ]
 
 ## Calculating Accuracy
-acc_chronic_medicated_SSD_550 = np.sum(data_chronic_medicated_SSD_550[1]-data_chronic_medicated_SSD_550[3]==0) / len(data_chronic_medicated_SSD_550)
-acc_first_episode_unmedicated_SSD_550 = np.sum(data_firstepisode_unmedicated_SSD_550[1]-data_firstepisode_unmedicated_SSD_550[3]==0) / len(data_firstepisode_unmedicated_SSD_550)
-acc_firstepisode_medicated_SSD_550 = np.sum(data_firstepisode_medicated_SSD_550[1]-data_firstepisode_medicated_SSD_550[3]==0) / len(data_firstepisode_medicated_SSD_550)
-acc_all_SSD_550 = np.sum(scale_550_selected[1]-scale_550_selected[3]==0) / len(scale_550_selected)
+acc_chronic_medicated_SSD_550_24 = np.sum(data_chronic_medicated_SSD_550_24[1]-data_chronic_medicated_SSD_550_24[3]==0) / len(data_chronic_medicated_SSD_550_24)
+acc_firstepisode_medicated_SSD_550_24 = np.sum(data_firstepisode_medicated_SSD_550_24[1]-data_firstepisode_medicated_SSD_550_24[3]==0) / len(data_firstepisode_medicated_SSD_550_24)
+acc_first_episode_unmedicated_SSD_550_24 = np.sum(data_firstepisode_unmedicated_SSD_550_24[1]-data_firstepisode_unmedicated_SSD_550_24[3]==0) / len(data_firstepisode_unmedicated_SSD_550_24)
+acc_all_SSD_550_24 = np.sum(scale_550_selected[1]-scale_550_selected[3]==0) / len(scale_550_selected)
+# eval_performance(scale_550_selected[1].values, scale_550_selected[3].values, scale_550_selected[2].values)
 
-eval_performance(scale_550_selected[1].values, scale_550_selected[3].values, scale_550_selected[2].values)
+n = len(data_chronic_medicated_SSD_550_24)
+acc = acc_chronic_medicated_SSD_550_24
+k = np.int32(n * acc)
+p, sum_prob, prob, randk = lc_binomialtest(n, k, 0.5, 0.5)
+print(p)
+
+n = len(data_firstepisode_medicated_SSD_550_24)
+acc = acc_firstepisode_medicated_SSD_550_24
+k = np.int32(n * acc)
+p, sum_prob, prob, randk = lc_binomialtest(n, k, 0.5, 0.5)
+print(p)
+
+n = len(data_firstepisode_unmedicated_SSD_550_24)
+acc = acc_first_episode_unmedicated_SSD_550_24
+k = np.int32(n * acc)
+p, sum_prob, prob, randk = lc_binomialtest(n, k, 0.5, 0.5)
+print(p)
+
+duration = 36  # Upper limit of first episode: 
+""" reference:
+1. Kane JM, Robinson DG, Schooler NR, et al. Comprehensive versus usual
+community care for first-episode psychosis: 2-year outcomes from the NIMH
+RAISE early treatment program. Am J Psychiatry. 2016;173(4):362-372. doi:10.1176/appi.ajp.2015.15050632.
+2. Cognitive Impairment in Never-Medicated Individuals on the Schizophrenia Spectrum. doi:10.1001/jamapsychiatry.2020.0001"
+"""
+
+# Frist episode unmedicated; first episode medicated; chronic medicated
+data_chronic_medicated_SSD_550_36 = scale_550_selected[
+    (scale_550_selected['诊断']==3) & 
+    (scale_550_selected['病程月'] > duration) & 
+    (scale_550_selected['用药'] == 1)
+]
+data_firstepisode_medicated_SSD_550_36 = scale_550_selected[
+    (scale_550_selected['诊断']==3) & 
+    (scale_550_selected['首发'] == 1) &
+    (scale_550_selected['病程月'] <= duration) & 
+    (scale_550_selected['用药'] == 1)
+]
+data_firstepisode_unmedicated_SSD_550_36 = scale_550_selected[
+    (scale_550_selected['诊断']==3) & 
+    (scale_550_selected['首发'] == 1) &
+    (scale_550_selected['病程月'] <= duration) & 
+    (scale_550_selected['用药'] == 0)
+]
+
+## Calculating Accuracy
+acc_chronic_medicated_SSD_550_36 = np.sum(data_chronic_medicated_SSD_550_36[1]-data_chronic_medicated_SSD_550_36[3]==0) / len(data_chronic_medicated_SSD_550_36)
+acc_firstepisode_medicated_SSD_550_36 = np.sum(data_firstepisode_medicated_SSD_550_36[1]-data_firstepisode_medicated_SSD_550_36[3]==0) / len(data_firstepisode_medicated_SSD_550_36)
+acc_first_episode_unmedicated_SSD_550_36 = np.sum(data_firstepisode_unmedicated_SSD_550_36[1]-data_firstepisode_unmedicated_SSD_550_36[3]==0) / len(data_firstepisode_unmedicated_SSD_550_36)
+acc_all_SSD_550_36 = np.sum(scale_550_selected[1]-scale_550_selected[3]==0) / len(scale_550_selected)
+# eval_performance(scale_550_selected[1].values, scale_550_selected[3].values, scale_550_selected[2].values)
+
+n = len(data_chronic_medicated_SSD_550_36)
+acc = acc_chronic_medicated_SSD_550_36
+k = np.int32(n * acc)
+p, sum_prob, prob, randk = lc_binomialtest(n, k, 0.5, 0.5)
+print(p)
+
+n = len(data_firstepisode_medicated_SSD_550_36)
+acc = acc_firstepisode_medicated_SSD_550_36
+k = np.int32(n * acc)
+p, sum_prob, prob, randk = lc_binomialtest(n, k, 0.5, 0.5)
+print(p)
+
+n = len(data_firstepisode_unmedicated_SSD_550_36)
+acc = acc_first_episode_unmedicated_SSD_550_36
+k = np.int32(n * acc)
+p, sum_prob, prob, randk = lc_binomialtest(n, k, 0.5, 0.5)
+print(p)
+
+
+plt.figure(figsize=(10,8))
+plt.subplot(121)
+plt.bar([0,1,2],[acc_chronic_medicated_SSD_550_24, acc_firstepisode_medicated_SSD_550_24, acc_first_episode_unmedicated_SSD_550_24], alpha=0.5)
+plt.yticks(fontsize=12)
+plt.xticks([0, 1, 2], ['Chronic SSD', 'First episode medicated SSD', 'First episode unmedicated SSD'], rotation=45, ha="right")  
+plt.ylabel('Sensitivity', fontsize=15)
+plt.grid(axis='y')
+plt.title('Threshold=24 months', fontsize=15, fontweight='bold')
+
+plt.subplot(122)
+plt.bar([0,1,2],[acc_chronic_medicated_SSD_550_36, acc_firstepisode_medicated_SSD_550_36, acc_first_episode_unmedicated_SSD_550_36], alpha=0.5)
+plt.yticks(fontsize=12)
+plt.xticks([0, 1, 2], ['Chronic SSD', 'First episode medicated SSD', 'First episode unmedicated SSD'], rotation=45, ha="right")  
+plt.ylabel('Sensitivity', fontsize=15)
+plt.grid(axis='y')
+plt.title('Threshold=36 months', fontsize=15, fontweight='bold')
+
+plt.subplots_adjust(wspace = 0.2, hspace =0)
+plt.tight_layout()
+pdf = PdfPages(r'D:\WorkStation_2018\SZ_classification\Figure\Processed\other_thrd.pdf')
+pdf.savefig()
+pdf.close()
+plt.show()
 print('-'*50)
 
-# Extract subjects' demographic data
-subinfo_chronic_medicated = data_chronic_medicated_SSD_550[['folder', '年龄', '性别', '学历（年）', 'BPRS_Total', 'mean FD_Power', '病程月']]
-subinfo_firstepisode_medicated = data_firstepisode_medicated_SSD_550[['folder', '年龄', '性别', '学历（年）', 'BPRS_Total', 'mean FD_Power', '病程月']]
-subinfo_firstepisode_unmedicated = data_firstepisode_unmedicated_SSD_550[['folder', '年龄', '性别', '学历（年）', 'BPRS_Total', 'mean FD_Power', '病程月']]
+
+#%% Posthoc analysis: 
+data_unmedicated_SSD_550 = scale_550_selected[
+    (scale_550_selected['诊断']==3) & 
+    (scale_550_selected['用药'] == 0)
+]
+
+data_unmedicated_SP_550 = scale_550_selected[
+    (scale_550_selected['诊断']==3) & 
+    (scale_550_selected['病程月'] < 6) & 
+    (scale_550_selected['用药'] == 0)
+]
+
+data_unmedicated_SZ_550 = scale_550_selected[
+    (scale_550_selected['诊断']==3) & 
+    (scale_550_selected['病程月'] >= 6) & 
+    (scale_550_selected['用药'] == 0)
+]
+
+
+plt.figure(figsize=(10,7))
+plt.subplot(1,2,1)
+plt.bar([0,1,2], [acc_unmedicated_SSD_550, acc_unmedicated_SP_550, acc_unmedicated_SZ_550], alpha=0.5)
+plt.xticks(ticks=[0,1,2], labels=['Unmedicated SSD','Unmedicated SP', 'Unmedicated SZ'], fontsize=10, rotation=45, ha='right')
+plt.grid(axis='y')
+plt.ylabel('Sensitivity', fontsize=15)
+plt.tight_layout()
+
+
+plt.subplot(1,2,2)
+ViolinPlotMatplotlib().plot([data_unmedicated_SSD_550['病程月'].dropna().values], positions=[0])
+ViolinPlotMatplotlib().plot([data_unmedicated_SP_550['病程月'].dropna().values], positions=[1])
+ViolinPlotMatplotlib().plot([data_unmedicated_SZ_550['病程月'].dropna().values], positions=[2])
+plt.grid(axis='y')
+plt.xticks(ticks=[0,1,2], labels=['Unmedicated SSD','Unmedicated SP', 'Unmedicated SZ'], fontsize=10, rotation=45, ha='right')
+y_major_locator=MultipleLocator(10)
+plt.ylabel('Duration', fontsize=15)
+ax=plt.gca()
+ax.yaxis.set_major_locator(y_major_locator)
+
+plt.subplots_adjust(wspace = 0.2, hspace =0)
+pdf = PdfPages(r'D:\WorkStation_2018\SZ_classification\Figure\Processed\sensitivity_of_unmedicated_subgroups.pdf')
+pdf.savefig()
+pdf.close()
+plt.show()
+
+acc_unmedicated_SSD_550 = np.sum(data_unmedicated_SSD_550[1]-data_unmedicated_SSD_550[3]==0) / len(data_unmedicated_SSD_550)
+acc_unmedicated_SP_550 = np.sum(data_unmedicated_SP_550[1]-data_unmedicated_SP_550[3]==0) / len(data_unmedicated_SP_550)
+acc_unmedicated_SZ_550 = np.sum(data_unmedicated_SZ_550[1]-data_unmedicated_SZ_550[3]==0) / len(data_unmedicated_SZ_550)
+print(acc_unmedicated_SSD_550, acc_unmedicated_SP_550, acc_unmedicated_SZ_550)
+print(len(data_unmedicated_SSD_550 ), len(data_unmedicated_SP_550), len(data_unmedicated_SZ_550))
+
+
+#%% Extract subjects' demographic data
+subinfo_chronic_medicated = data_chronic_medicated_SSD_550_24[['folder', '年龄', '性别', '学历（年）', 'BPRS_Total', 'mean FD_Power', '病程月']]
+subinfo_firstepisode_medicated = data_firstepisode_medicated_SSD_550_24[['folder', '年龄', '性别', '学历（年）', 'BPRS_Total', 'mean FD_Power', '病程月']]
+subinfo_firstepisode_unmedicated = data_firstepisode_unmedicated_SSD_550_24[['folder', '年龄', '性别', '学历（年）', 'BPRS_Total', 'mean FD_Power', '病程月']]
 
 ## Save index and subjects' demographic data
 subinfo_chronic_medicated[['folder']].to_csv(r'D:\WorkStation_2018\SZ_classification\Scale\index_chronic.txt', index=False, header=False)
