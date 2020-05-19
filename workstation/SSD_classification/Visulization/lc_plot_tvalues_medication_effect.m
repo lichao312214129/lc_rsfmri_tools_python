@@ -1,11 +1,11 @@
 % This script is used to visualize the classification weight using network matrix and circle style.
 %% -----------------------------------------------------------------
 tvalues_medicated = importdata('D:\WorkStation_2018\SZ_classification\Data\Stat_results\tvalue_medication.mat');
+tvalues_duration = importdata('D:\WorkStation_2018\SZ_classification\Data\Stat_results\tvalue_duration.mat');
 cmp = 'D:\My_Codes\lc_private_codes\workstation\SSD_classification\Visulization\cmp_tvalues_medication_effect.mat';
 legends = {'Amyg', 'BG', 'Tha', 'Hipp', 'Limbic', 'Visual', 'SomMot', 'Control', 'Default', 'DorsAttn',  'Sal/VentAttn'};
 xstr = {'Amyg', 'BG', 'Tha', 'Hipp', 'Limbic', 'Visual', 'SomMot', 'Control', 'Default', 'DorsAttn',  'Sal/VentAttn'};
 legend_fontsize = 7;
-thred_cohen = 0.5;
 how_disp = 'all';
 if_binary = 0;
 which_group = 1;
@@ -43,7 +43,7 @@ caxis([-8 8])
 axis square
 
 % Save
-saveas(gcf, 'D:\WorkStation_2018\SZ_classification\Figure\tvalue_medication_effect.pdf');
+% saveas(gcf, 'D:\WorkStation_2018\SZ_classification\Figure\tvalue_medication_effect.pdf');
 
 
 function meanFC = get_average_diff(diff, netidx)

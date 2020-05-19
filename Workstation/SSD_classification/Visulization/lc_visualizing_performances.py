@@ -1,4 +1,4 @@
-wu# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 This script is used to perform post-hoc analysis and visualization: 
 the classification performance of subsets (only for Schizophrenia Spectrum: SZ and Schizophreniform).
