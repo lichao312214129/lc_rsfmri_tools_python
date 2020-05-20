@@ -1,4 +1,4 @@
-function amygdata_segmentation_for_zhangyue(varargin)
+function amygdata_segmentation_for_zhangyue_v1(varargin)
 % AMGYDALA_SEGMENTATION_FOR_ZHANGYUE
 % Usage: see EXAMPLE below.
 % GOAL: This function is used to segment amgydala into three sub-regions
@@ -15,8 +15,8 @@ function amygdata_segmentation_for_zhangyue(varargin)
 % OUTPUT:
 %       All subject level segmentation and one group level segmentation.
 % EXAMPLE:
-% amygdata_segmentation_for_zhangyu('-dd', 'D:\workstation_b\ZhangYue_Guangdongshengzhongyiyuan\signals',...
-%                           '-arf', 'D:\workstation_b\ZhangYue_Guangdongshengzhongyiyuan\T2_OnlySignificance.nii',...
+% amygdata_segmentation_for_zhangyue_v1('-dd', 'D:\workstation_b\ZhangYue_Guangdongshengzhongyiyuan\signals',...
+%                           '-arf', 'D:\workstation_b\ZhangYue_Guangdongshengzhongyiyuan\Amygdala_3_3_3.nii',...
 %                           '-mf', 'D:\workstation_b\ZhangYue_Guangdongshengzhongyiyuan\sorted_brainnetome_atalas_3mm.nii',...
 %                           '-od', 'D:\workstation_b\ZhangYue_Guangdongshengzhongyiyuan');
 % REFERENCE:
@@ -67,7 +67,6 @@ data_path = data_path(3:end)';
 n_sub = length(data_path);
 datafile_path = cell(n_sub,1);
 for i = 1: n_sub
-    fprintf('%d/%d\n', i, n_sub);
     one_data_strut = dir(data_path{i});
     one_data_path = fullfile(data_path{i}, {one_data_strut.name});
     one_data_path = one_data_path(3:end);
@@ -110,7 +109,7 @@ for i = 1:n_sub
     stream = RandStream('mlfg6331_64');
     options = statset('UseParallel',1,'UseSubstreams',1,'Streams',stream);
     fc(isnan(fc)) = 0;
-    [idx, C, sumd, D] = kmeans(fc, 3, 'Distance', 'cityblock', 'Options', options, 'Start', 'plus','replicate',10, 'Display','iter');
+    [idx, C, sumd, D] = kmeans(fc, 3, 'Distance', 'cityblock', 'Options', options, 'replicate',10, 'Display','iter');
     
     % Segment the target region into several sub-regions.
     segmentation = zeros(size(amygdala_mask));
@@ -124,7 +123,7 @@ end
 
 % Group segmentation
 fc_all_mean = fc_all./n_sub;
-[idx_group, C, sumd, D] = kmeans(fc_all_mean, 3, 'Distance', 'cityblock', 'Options', options, 'Start', 'plus','replicate',10, 'Display','iter');
+[idx_group, C, sumd, D] = kmeans(fc_all_mean, 3, 'Distance', 'cityblock', 'Options', options, 'replicate',10, 'Display','iter');
 segmentation_group = zeros(size(amygdala_mask));
 segmentation_group(amygdala_mask) = idx_group;
 segmentation_group_3d = reshape(segmentation_group, size(amygdala));
