@@ -141,7 +141,6 @@ parfor i = 1:n_sub
     
     % Step 3 is to calculate the partial correlations
     fc = corr(roi_signal, non_roi_signal, 'Type','Pearson', 'rows', 'pairwise');
-    
     % 
     nannum = isnan(fc);
     infnum = isinf(fc);
@@ -155,7 +154,7 @@ parfor i = 1:n_sub
     options = statset('UseParallel',1,'UseSubstreams',1,'Streams',stream);
     fc(isnan(fc)) = 0;
     fc(isinf(fc)) = 1;
-    [idx, C, sumd, D] = kmeans(fc, num_of_subregion, 'Distance', 'cityblock', 'Options', options, 'replicate',10, 'Display','iter');
+    [idx, C, sumd, D] = kmeans(fc, num_of_subregion, 'Distance', 'cityblock', 'Options', options, 'replicate',10, 'Display','iter', 'emptyaction', 'singleton');
     
     % Segment the target region into several sub-regions.
     segmentation = zeros(size(roi_mask));
@@ -171,7 +170,7 @@ end
 fc_all_mean = fc_all./n_sub;
 stream = RandStream('mlfg6331_64');
 options = statset('UseParallel',1,'UseSubstreams',1,'Streams',stream);
-[idx_group, C, sumd, D] = kmeans(fc_all_mean, num_of_subregion, 'Distance', 'cityblock', 'Options', options, 'replicate',10, 'Display','iter');
+[idx_group, C, sumd, D] = kmeans(fc_all_mean, num_of_subregion, 'Distance', 'cityblock', 'Options', options, 'replicate',10, 'Display','iter', 'emptyaction', 'singleton');
 segmentation_group = zeros(size(roi_mask));
 segmentation_group(roi_mask) = idx_group;
 segmentation_group_3d = reshape(segmentation_group, size(roi));
