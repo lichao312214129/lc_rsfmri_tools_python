@@ -25,7 +25,7 @@ function amygdata_segmentation_for_zhangyue_v1(varargin)
 % Email: lichao19870617@gmail.com
 
 if nargin == 0
-    help amgydala_segmentation_for_zhangyue
+    help amgydala_segmentation_for_zhangyue_v1
     return
 end
 
