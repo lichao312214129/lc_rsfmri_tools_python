@@ -7,7 +7,7 @@ function lc_roi_segmentation(varargin)
 %       REQUIRED:
 %           [--data_dir, -dd]: directory of all 4D files, preprocessed using software like DPABI (e.g., FunImgARWSFC).
 %           [--roi2segment,-rs]: image file of roi need to segment, .nii or .img
-%           [--num_of_subregion, -ns]: number of sub-regions you want to segment the roi2segment, default is 2;
+%           [--num_of_subregion, -ns]: number of sub-regions you want to segment the roi2segment, default is 3;
 %           
 %       OPTIONAL
 %           [--mask_file, -mf]:  mask file for filtering data, .nii or .img
@@ -15,24 +15,24 @@ function lc_roi_segmentation(varargin)
 %
 % OUTPUT:
 %       All subject level segmentation and one group level segmentation.
+% EXAMPLE 2 :
+% lc_roi_segmentation('-dd', 'D:\workstation_b\ZhangYue_Guangdongshengzhongyiyuan\signals',...
+%                           '-rs', 'D:\workstation_b\ZhangYue_Guangdongshengzhongyiyuan\Amygdala_3_3_3.nii',...
+%                           '-ns', 2,... 
+%                           '-mf', 'D:\workstation_b\ZhangYue_Guangdongshengzhongyiyuan\sorted_brainnetome_atalas_3mm.nii',...
+%                           '-od', 'D:\workstation_b\ZhangYue_Guangdongshengzhongyiyuan');
+% 
+% REFERENCE:
+%   <Individual-specific functional connectivity of the roi: A substrate for precision psychiatry>
+% @author: Li Chao
+% Email: lichao19870617@gmail.com
+
 % EXAMPLE 1:
 % lc_roi_segmentation('-dd', 'D:\FunImgARWSFC',...
 %                     '-rs', 'D:\roi_3_3_3.nii',...
 %                     '-ns', 2,... 
 %                     '-mf', 'D:\sorted_brainnetome_atalas_3mm.nii',...
 %                     '-od', 'D:\Results');
-
-% EXAMPLE 2 :
-% lc_roi_segmentation('-dd', 'D:\workstation_b\ZhangYue_Guangdongshengzhongyiyuan\signals',...
-%                           '-rs', 'D:\workstation_b\ZhangYue_Guangdongshengzhongyiyuan\roi_3_3_3.nii',...
-%                           '-ns', 2,... 
-%                           '-mf', 'D:\workstation_b\ZhangYue_Guangdongshengzhongyiyuan\sorted_brainnetome_atalas_3mm.nii',...
-%                           '-od', 'D:\workstation_b\ZhangYue_Guangdongshengzhongyiyuan');
-
-% REFERENCE:
-%   <Individual-specific functional connectivity of the roi: A substrate for precision psychiatry>
-% @author: Li Chao
-% Email: lichao19870617@gmail.com
 
 fprintf('-----------------------------------------------------------\n');
 fprintf('Citing Information:\nIf you think this function is useful for your work, please star our project:\nhttps://github.com/easylearn-fmri/easylearn\n');
