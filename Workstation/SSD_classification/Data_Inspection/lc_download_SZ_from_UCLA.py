@@ -14,11 +14,14 @@ from concurrent.futures import ThreadPoolExecutor
 # Inputs
 participant_id_file = r'H:\Data\精神分裂症\ds000030\schizophrenia_UCLA_restfmri\participants.tsv'
 n_processess = 8  
-save_path = r'H:\Data\精神分裂症\ds000030\schizophrenia_UCLA_restfmri'
+save_path = r'H:\Data\精神分裂症\ds000030\schizophrenia_UCLA_restfmri_all'
+if not os.path.exists(save_path):
+    os.mkdir(save_path)
 
 # Read participants id and selecte SZ and HC
 subid = pd.read_csv(participant_id_file,sep='\t')
-subid = subid['participant_id'][subid['diagnosis'].isin(['SCHZ','CONTROL'])][subid['rest']==1]
+# subid = subid['participant_id'][subid['diagnosis'].isin(['SCHZ','CONTROL'])][subid['rest']==1]
+subid = subid['participant_id'][subid['rest']==1]
 
 # Identify all nii.gz files and json files in website
 path_img = ['https://openneuro.org/crn/datasets/ds000030/snapshots/00016/files/' + sid + ':func:' + sid + '_task-rest_bold.nii.gz' for sid in subid]
