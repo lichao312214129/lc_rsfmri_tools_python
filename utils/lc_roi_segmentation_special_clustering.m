@@ -1,4 +1,4 @@
-function lc_roi_segmentation(varargin)
+function lc_roi_segmentation_special_clustering(varargin)
 % LC_ROI_SEGMENTATION
 % Usage: see EXAMPLE below.
 % GOAL: This function is used to segment a ROI into K sub-regions
@@ -13,11 +13,12 @@ function lc_roi_segmentation(varargin)
 %           [--mask_file, -mf]:  mask file for filtering data, .nii or .img
 %           [--out_dir, -od]: output directory
 %           [--n_workers, -nw]: How many threads(CPU) to use.
+%           [--n_replicate, -nr]  Number of times to repeat clustering using new initial cluster centroid positions, default is 10.
 %
 % OUTPUT:
 %       All subject level segmentation and one group level segmentation.
 % EXAMPLE 2 :
-% lc_roi_segmentation('-dd', 'D:\workstation_b\ZhangYue_Guangdongshengzhongyiyuan\signals',...
+% lc_roi_segmentation_special_clustering('-dd', 'D:\workstation_b\ZhangYue_Guangdongshengzhongyiyuan\signals',...
 %                           '-rs', 'D:\workstation_b\ZhangYue_Guangdongshengzhongyiyuan\Amygdala_3_3_3.nii',...
 %                           '-ns', 3,... 
 %                           '-mf', 'D:\workstation_b\ZhangYue_Guangdongshengzhongyiyuan\sorted_brainnetome_atalas_3mm.nii',...
@@ -27,13 +28,6 @@ function lc_roi_segmentation(varargin)
 %   <Individual-specific functional connectivity of the roi: A substrate for precision psychiatry>
 % @author: Li Chao
 % Email: lichao19870617@gmail.com
-
-% EXAMPLE 1:
-% lc_roi_segmentation('-dd', 'D:\FunImgARWSFC',...
-%                     '-rs', 'D:\roi_3_3_3.nii',...
-%                     '-ns', 3,... 
-%                     '-mf', 'D:\sorted_brainnetome_atalas_3mm.nii',...
-%                     '-od', 'D:\Results');
 
 help lc_roi_segmentation
 fprintf('-----------------------------------------------------------\n');
@@ -48,6 +42,7 @@ num_of_subregion = 3;
 mask_file = '';
 out_dir = pwd;
 n_workers = 4;
+n_replicate = 10;
 
 if( sum(or(strcmpi(varargin,'--data_dir'),strcmpi(varargin,'-dd')))==1)
     data_dir = varargin{find(or(strcmpi(varargin,'--data_dir'),strcmp(varargin,'-dd')))+1};
@@ -77,6 +72,10 @@ end
 
 if( sum(or(strcmpi(varargin,'--n_workers'),strcmpi(varargin,'-nw')))==1)
     n_workers = varargin{find(or(strcmpi(varargin,'--n_workers'),strcmp(varargin,'-nw')))+1};
+end
+
+if( sum(or(strcmpi(varargin,'--n_replicate'),strcmpi(varargin,'-nr')))==1)
+    n_replicate = varargin{find(or(strcmpi(varargin,'--n_replicate'),strcmp(varargin,'-nr')))+1};
 end
 
 % Make output directory
@@ -128,7 +127,11 @@ catch
     fprintf('Parpool already running!\n')
 end
 
-parfor i = 1:n_sub
+% Kmeans
+disp('Kmeans...');
+stream = RandStream('mlfg6331_64');
+options = statset('UseParallel',1,'UseSubstreams',1,'Streams',stream);
+for i = 1:n_sub
     fprintf('Running %d/%d\n', i, n_sub);
     disp('----------------------------------');
     % Extract roi
@@ -148,13 +151,11 @@ parfor i = 1:n_sub
         fc_all = fc_all + fc;
     end
     
-    % Kmeans
-    disp('Kmeans...');
-    stream = RandStream('mlfg6331_64');
-    options = statset('UseParallel',1,'UseSubstreams',1,'Streams',stream);
     fc(isnan(fc)) = 0;
     fc(isinf(fc)) = 1;
-    [idx, C, sumd, D] = kmeans(fc, num_of_subregion, 'Distance', 'cityblock', 'Options', options, 'replicate',10, 'Display','iter', 'emptyaction', 'singleton');
+    W = corr(fc');
+    [idx, L, D, Q, V ] = special_clustering(W, num_of_subregion, n_replicate);
+%     [idx, C1, sumd, D] = kmeans(fc, num_of_subregion, 'Distance', 'cityblock', 'Options', options, 'replicate',10, 'Display','iter', 'emptyaction', 'singleton');
     
     % Segment the target region into several sub-regions.
     segmentation = zeros(size(roi_mask));
@@ -168,9 +169,9 @@ end
 
 % Group segmentation
 fc_all_mean = fc_all./n_sub;
-stream = RandStream('mlfg6331_64');
-options = statset('UseParallel',1,'UseSubstreams',1,'Streams',stream);
-[idx_group, C, sumd, D] = kmeans(fc_all_mean, num_of_subregion, 'Distance', 'cityblock', 'Options', options, 'replicate',10, 'Display','iter', 'emptyaction', 'singleton');
+ W_all = corr(fc_all_mean');
+[idx_group, L, D, Q, V ] = special_clustering(W_all, num_of_subregion, n_replicate);
+% [idx_group, C, sumd, D] = kmeans(fc_all_mean, num_of_subregion, 'Distance', 'cityblock', 'Options', options, 'replicate',10, 'Display','iter', 'emptyaction', 'singleton');
 segmentation_group = zeros(size(roi_mask));
 segmentation_group(roi_mask) = idx_group;
 segmentation_group_3d = reshape(segmentation_group, size(roi));
@@ -181,7 +182,7 @@ y_Write(segmentation_group_3d, header, fullfile(out_dir, 'group_segmentation.nii
 disp('Done!');
 end
 
-function [ C, L, D, Q, V ] = special_clustering(W, k)
+function [ C, L, D, Q, V ] = special_clustering(W, k, n_replicate)
 % spectral clustering algorithm
 % Input: 
 % -----
@@ -211,5 +212,7 @@ L = D - W;
 
 % use the k-means algorithm to cluster V row-wise
 % C will be a n-by-1 matrix containing the cluster number for each data point
-C = kmeans(Q, k);
+stream = RandStream('mlfg6331_64');
+options = statset('UseParallel',1,'UseSubstreams',1,'Streams',stream);
+C = kmeans(Q, k, 'Distance', 'cityblock', 'Options', options, 'replicate',n_replicate, 'Display','iter', 'emptyaction', 'singleton');
 end
