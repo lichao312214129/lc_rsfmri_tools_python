@@ -13,7 +13,7 @@ function lc_roi_segmentation_special_clustering(varargin)
 %           [--mask_file, -mf]:  mask file for filtering data, .nii or .img
 %           [--out_dir, -od]: output directory
 %           [--n_workers, -nw]: How many threads(CPU) to use.
-%           [--n_replicate, -nr]  Number of times to repeat clustering using new initial cluster centroid positions, default is 10.
+%           [--n_replicate, -nr]  Number of times to repeat clustering using new initial cluster centroid positions, default is 100.
 %           [--is_pca, -ip] Whether perform PCA to reduce dimension, default is 1,
 %           [--explained_cov, -ec]: how many explained variance to retain, default is 0.90, range = (0, 1]
 %
@@ -25,7 +25,7 @@ function lc_roi_segmentation_special_clustering(varargin)
 %                           '-ns', 3,... 
 %                            '-nr', 500,...
 %                            '-ip',1,...
-%                            '-ec', 0.90,... 
+%                            '-ec', 0.80,... 
 %                           '-mf', 'D:\workstation_b\ZhangYue_Guangdongshengzhongyiyuan\sorted_brainnetome_atalas_3mm.nii',...
 %                           '-od', 'D:\workstation_b\ZhangYue_Guangdongshengzhongyiyuan');
 % 
@@ -47,7 +47,7 @@ num_of_subregion = 3;
 mask_file = '';
 out_dir = pwd;
 n_workers = 4;
-n_replicate = 10;
+n_replicate = 100;
 is_pca = 1;
 explained_cov = 0.90;
 
@@ -146,7 +146,7 @@ end
 disp('Kmeans...');
 stream = RandStream('mlfg6331_64');
 options = statset('UseParallel',1,'UseSubstreams',1,'Streams',stream);
-n_sub_count = 0;
+idx_all = zeros(size(roi_signal, 2),n_sub);
 for i = 1:n_sub
     fprintf('Running %d/%d\n', i, n_sub);
     disp('----------------------------------');
@@ -188,10 +188,9 @@ for i = 1:n_sub
     fc(isnan(fc)) = 0;
     fc(isinf(fc)) = 1;
     W = corr(fc');
-    W_all = W_all + W;
-    
-    [idx, L, D, Q, V ] = special_clustering(W, num_of_subregion, n_replicate);
 
+    idx = special_clustering(W, num_of_subregion, n_replicate);
+    idx_all(:,i) = idx;
     % Segment the target region into several sub-regions.
     segmentation = zeros(size(roi_mask));
     segmentation(roi_mask) = idx;
@@ -203,8 +202,7 @@ for i = 1:n_sub
 end
 
 % Group segmentation
-W_all_mean = W_all./n_sub;
-[idx_group, L, D, Q, V ] = special_clustering(W_all_mean, num_of_subregion, n_replicate);
+idx_group = max(idx_all')';
 segmentation_group = zeros(size(roi_mask));
 segmentation_group(roi_mask) = idx_group;
 segmentation_group_3d = reshape(segmentation_group, size(roi));
@@ -215,7 +213,7 @@ y_Write(segmentation_group_3d, header, fullfile(out_dir, 'group_segmentation.nii
 disp('Done!');
 end
 
-function [ C, L, D, Q, V ] = special_clustering(W, k, n_replicate)
+function [ idx, L, D, Q, V ] = special_clustering(W, k, n_replicate)
 % spectral clustering algorithm
 % Input: 
 % -----
@@ -224,7 +222,7 @@ function [ C, L, D, Q, V ] = special_clustering(W, k, n_replicate)
 
 % return: 
 % ------
-%   C: cluster indicator vectors as columns in 
+%   idx: cluster indicator vectors as columns in 
 %   L: unnormalized Laplacian
 %   D: degree matrix
 %   Q: eigenvectors matrix
@@ -238,8 +236,8 @@ D = sparse(1:size(W, 1), 1:size(W, 2), degs);
 % compute unnormalized Laplacian
 L = D - W;
 
-x = 1:size(L,1);
-[L,~] = fillmissing(L,'linear','SamplePoints',x);
+order_occurence = 1:size(L,1);
+[L,~] = fillmissing(L,'linear','SamplePoints',order_occurence);
 
 % compute the eigenvectors corresponding to the k smallest eigenvalues
 % diagonal matrix V is NcutL's k smallest magnitude eigenvalues 
@@ -250,5 +248,21 @@ x = 1:size(L,1);
 % C will be a n-by-1 matrix containing the cluster number for each data point
 stream = RandStream('mlfg6331_64');
 options = statset('UseParallel',1,'UseSubstreams',1,'Streams',stream);
-C = kmeans(Q, k, 'Distance', 'cityblock', 'Options', options, 'replicate',n_replicate, 'Display','iter', 'emptyaction', 'singleton');
+[idx, C,sumd, D] = kmeans(Q, k, 'Distance', 'cityblock', 'Options', options, 'replicate',n_replicate, 'Display','iter', 'emptyaction', 'singleton');
+
+% Sort idx so each subject has the same order
+order_occurence = idx(1);
+count =1;
+for i = 1:numel(idx)
+    if ~(ismember( idx(i),order_occurence))
+        order_occurence(count+1) = idx(i);
+        count = count +1;
+    end
+end   
+niter = numel(order_occurence);
+maxnum = max(order_occurence);
+for i = 1: niter
+    idx(idx==order_occurence(i)) = maxnum + i;
+end
+idx = idx - maxnum;
 end
