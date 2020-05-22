@@ -7,9 +7,9 @@ function lc_roi_segmentation_special_clustering(varargin)
 %       REQUIRED:
 %           [--data_dir, -dd]: directory of all 4D files, preprocessed using software like DPABI (e.g., FunImgARWSFC).
 %           [--roi2segment,-rs]: image file of roi need to segment, .nii or .img
-%           [--num_of_subregion, -ns]: number of sub-regions you want to segment the roi2segment, default is 3;
 %           
 %       OPTIONAL
+%           [--num_of_subregion, -ns]: number of sub-regions you want to segment the roi2segment, default is 3;
 %           [--mask_file, -mf]:  mask file for filtering data, .nii or .img
 %           [--out_dir, -od]: output directory
 %           [--n_workers, -nw]: How many threads(CPU) to use.
@@ -19,7 +19,7 @@ function lc_roi_segmentation_special_clustering(varargin)
 %
 % OUTPUT:
 %       All subject level segmentation and one group level segmentation.
-% EXAMPLE 2 :
+% EXAMPLE 1 :
 % lc_roi_segmentation_special_clustering('-dd', 'D:\workstation_b\ZhangYue_Guangdongshengzhongyiyuan\signals',...
 %                           '-rs', 'D:\workstation_b\ZhangYue_Guangdongshengzhongyiyuan\Amygdala_3_3_3.nii',...
 %                           '-ns', 3,... 
@@ -28,7 +28,14 @@ function lc_roi_segmentation_special_clustering(varargin)
 %                            '-ec', 0.80,... 
 %                           '-mf', 'D:\workstation_b\ZhangYue_Guangdongshengzhongyiyuan\sorted_brainnetome_atalas_3mm.nii',...
 %                           '-od', 'D:\workstation_b\ZhangYue_Guangdongshengzhongyiyuan');
-% 
+% EXAMPLE 2(without pca) :
+% lc_roi_segmentation_special_clustering('-dd', 'D:\workstation_b\ZhangYue_Guangdongshengzhongyiyuan\signals',...
+%                           '-rs', 'D:\workstation_b\ZhangYue_Guangdongshengzhongyiyuan\Amygdala_3_3_3.nii',...
+%                           '-ns', 3,... 
+%                            '-nr', 500,...
+%                            '-ip',0,...
+%                           '-mf', 'D:\workstation_b\ZhangYue_Guangdongshengzhongyiyuan\sorted_brainnetome_atalas_3mm.nii',...
+%                           '-od', 'D:\workstation_b\ZhangYue_Guangdongshengzhongyiyuan');
 % REFERENCE:
 %   <Individual-specific functional connectivity of the roi: A substrate for precision psychiatry>
 % @author: Li Chao
@@ -202,7 +209,19 @@ for i = 1:n_sub
 end
 
 % Group segmentation
-idx_group = max(idx_all')';
+% save(fullfile(out_dir,'idx_group.mat'), 'idx_all');
+n_voxel_in_roi = size(roi_signal, 2);
+idx_subgoup = 1:num_of_subregion;
+idx_group = zeros(n_voxel_in_roi,1);
+for i = 1:n_voxel_in_roi
+    comp = arrayfun(@(x) idx_all(i,:)-x, idx_subgoup, 'UniformOutput', false);
+    freq = cell2mat(cellfun(@(x) sum(x==0)/n_sub, comp, 'UniformOutput', false));
+    ig = find(freq==max(freq));
+    randig = randperm(numel(ig));
+    randig = randig(1);
+    idx_group(i) = ig(randig);
+end
+
 segmentation_group = zeros(size(roi_mask));
 segmentation_group(roi_mask) = idx_group;
 segmentation_group_3d = reshape(segmentation_group, size(roi));
