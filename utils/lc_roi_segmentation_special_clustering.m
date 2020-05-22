@@ -24,6 +24,8 @@ function lc_roi_segmentation_special_clustering(varargin)
 %                           '-rs', 'D:\workstation_b\ZhangYue_Guangdongshengzhongyiyuan\Amygdala_3_3_3.nii',...
 %                           '-ns', 3,... 
 %                            '-nr', 500,...
+%                            '-ip',1,...
+%                            '-ec', 0.90,... 
 %                           '-mf', 'D:\workstation_b\ZhangYue_Guangdongshengzhongyiyuan\sorted_brainnetome_atalas_3mm.nii',...
 %                           '-od', 'D:\workstation_b\ZhangYue_Guangdongshengzhongyiyuan');
 % 
@@ -169,9 +171,9 @@ for i = 1:n_sub
         n_comp = numel(explained);
         cum_ex_list = zeros(n_comp, 1);
         cum_ex = 0;
-        for i = 1:n_comp
-            cum_ex = cum_ex + explained(i);
-            cum_ex_list(i) = cum_ex;
+        for j = 1:n_comp
+            cum_ex = cum_ex + explained(j);
+            cum_ex_list(j) = cum_ex;
         end
         loc_cutoff_cum_ex = find(cum_ex_list >= explained_cov*100);
         loc_cutoff_cum_ex = loc_cutoff_cum_ex(1);
