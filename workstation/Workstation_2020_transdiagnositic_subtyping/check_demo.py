@@ -71,3 +71,5 @@ changed_after = diagnosis_second.iloc[diagnosis_changed_loc.values, :]
 # 
 loc_repeated_paire_in_discovery = np.in1d(repeatPairs_only_twice[0], repeat_id_in_discovery_first_column.values)
 repeated_paire_in_discovery = repeatPairs_only_twice.iloc[loc_repeated_paire_in_discovery,:]
+
+a=np.in1d(diagnosis_first.index[diagnosis_first['诊断']==6], diagosis_second.index[diagnosis_second['诊断']==6])
