@@ -7,11 +7,12 @@ import numpy as np
 import sys
 sys.path.append(r'D:\My_Codes\LC_Machine_Learning\lc_rsfmri_tools\lc_rsfmri_tools_python')
 import os
-from Utils.lc_read_write_mat import read_mat
+from eslearn.utils.lc_read_write_mat import read_mat
 
 #%% ----------------------------------Our center 550----------------------------------
-uid_path_550 = r'D:\WorkStation_2018\WorkStation_CNN_Schizo\Scale\selected_550.txt'
-scale_path_550 = r'D:\WorkStation_2018\WorkStation_CNN_Schizo\Scale\10-24大表.xlsx'
+uid_path_550 = r'D:\WorkStation_2018\SZ_classification\Scale\selected_550.txt'
+scale_path_550 = r'D:\WorkStation_2018\SZ_classification\Scale\10-24大表.xlsx'
+headmotion_file = r'D:\WorkStation_2018\SZ_classification\Scale\头动参数_1322.xlsx'
 
 scale_data_550 = pd.read_excel(scale_path_550)
 uid_550 = pd.read_csv(uid_path_550, header=None)
@@ -23,9 +24,22 @@ describe_duration_550 = scale_selected_550.groupby('诊断')['病程月'].descri
 describe_durgnaive_550 = scale_selected_550.groupby('诊断')['用药'].value_counts()
 describe_sex_550 = scale_selected_550.groupby('诊断')['性别'].value_counts()
 
+# Demographic
+demographic_info_dataset1 = scale_selected_550[['folder','年龄', '性别']]
+headmotion = pd.read_excel(headmotion_file)
+headmotion = headmotion[['Subject ID','mean FD_Power']]
+demographic_info_dataset1 = pd.merge(demographic_info_dataset1, headmotion, left_on='folder', right_on='Subject ID', how='inner')
+demographic_info_dataset1 = demographic_info_dataset1.drop(columns=['Subject ID'])
+
+site_dataset1 = pd.DataFrame(np.zeros([len(demographic_info_dataset1),1]))
+site_dataset1.columns = ['site']
+demographic_dataset1 = pd.concat([demographic_info_dataset1 , site_dataset1], axis=1)
+demographic_dataset1.columns = ['ID', 'Age', 'Sex', 'MeanFD', 'Site']
+
 #%% ----------------------------------BeiJing 206----------------------------------
-uid_path_206 = r'D:\WorkStation_2018\WorkStation_CNN_Schizo\Scale\北大精分人口学及其它资料\SZ_NC_108_100.xlsx'
-scale_path_206 = r'D:\WorkStation_2018\WorkStation_CNN_Schizo\Scale\北大精分人口学及其它资料\SZ_NC_108_100-WF.csv'
+uid_path_206 = r'D:\WorkStation_2018\SZ_classification\Scale\北大精分人口学及其它资料\SZ_NC_108_100.xlsx'
+scale_path_206 = r'D:\WorkStation_2018\SZ_classification\Scale\北大精分人口学及其它资料\SZ_NC_108_100-WF.csv'
+headmotion_file_206 = r'D:\WorkStation_2018\SZ_classification\Scale\北大精分人口学及其它资料\parameters\FD_power'
 uid_to_remove = ['SZ010109','SZ010009']
 
 scale_data_206 = pd.read_csv(scale_path_206)
@@ -55,10 +69,46 @@ scale_data_206['duration'] = np.array([np.float64(duration) if duration.strip() 
 describe_duration_206 = scale_data_206.groupby('group')['duration'].describe()
 describe_sex_206 = scale_data_206.groupby('group')['sex'].value_counts()
 
+# Demographic
+uid = pd.DataFrame(scale_data_206['ID'])
+uid['ID'] = uid['ID'].str.replace('NC','10');
+uid['ID'] = uid['ID'].str.replace('SZ','20');
+uid = pd.DataFrame(uid, dtype=np.int32)
+demographic_info_dataset2 = scale_data_206[['age', 'sex']]
+demographic_info_dataset2 = pd.concat([uid, demographic_info_dataset2], axis=1)
+
+headmotion_name_dataset2 = os.listdir(headmotion_file_206)
+headmotion_file_path_dataset2 = [os.path.join(headmotion_file_206, name) for name in headmotion_name_dataset2]
+
+meanfd = []
+for i, file in enumerate(headmotion_file_path_dataset2):
+    fd = np.loadtxt(file)
+    meanfd.append(np.mean(fd))  
+meanfd_dataset2 = pd.DataFrame(meanfd)
+
+headmotion_name_dataset2 = pd.Series(headmotion_name_dataset2)
+headmotion_name_dataset2 = headmotion_name_dataset2.str.findall('(NC.*[0-9]\d*|SZ.*[0-9]\d*)')
+headmotion_name_dataset2 = [str(id[0]) if id != [] else 0 for id in headmotion_name_dataset2]
+headmotion_name_dataset2 = pd.DataFrame([''.join(id.split('_')) if id != 0 else '0' for id in headmotion_name_dataset2])
+headmotion_name_dataset2[0] = headmotion_name_dataset2[0].str.replace('NC','10');
+headmotion_name_dataset2[0] = headmotion_name_dataset2[0].str.replace('SZ','20');
+headmotion_name_dataset2 = pd.DataFrame(headmotion_name_dataset2, dtype=np.int32)
+headmotion_name_dataset2 = pd.concat([headmotion_name_dataset2, meanfd_dataset2], axis=1) 
+headmotion_name_dataset2.columns = ['ID','meanFD']
+
+demographic_dataset2 = pd.merge(demographic_info_dataset2, headmotion_name_dataset2, left_on='ID', right_on='ID', how='left')
+
+site_dataset2 = pd.DataFrame(np.ones([len(demographic_dataset2),1]))
+site_dataset2.columns = ['site']
+
+demographic_dataset2 = pd.concat([demographic_dataset2, site_dataset2], axis=1)
+demographic_dataset2.columns = ['ID', 'Age', 'Sex', 'MeanFD', 'Site']
+
 #%% -------------------------COBRE----------------------------------
 # Inputs
-matroot = r'D:\WorkStation_2018\WorkStation_CNN_Schizo\Data\SelectedFC_COBRE'  # all mat files directory
+matroot = r'D:\WorkStation_2018\SZ_classification\Data\SelectedFC_COBRE'  # all mat files directory
 scale = r'H:\Data\精神分裂症\COBRE\COBRE_phenotypic_data.csv'  # whole scale path
+headmotion_file_COBRE = r'D:\WorkStation_2018\SZ_classification\Data\headmotion\cobre\HeadMotion.tsv'
 
 # Transform the .mat files to one .npy file
 allmatname = os.listdir(matroot)
@@ -87,10 +137,26 @@ scale_data_COBRE = pd.DataFrame(scale_data_COBRE, dtype=np.float64)
 describe_age_COBRE = scale_data_COBRE.groupby('Subject Type')['Current Age'].describe()
 describe_sex_COBRE = scale_data_COBRE.groupby('Subject Type')['Gender'].value_counts()
 
+headmotion_COBRE = pd.read_csv(headmotion_file_COBRE,sep='\t', index_col=False)
+headmotion_COBRE = headmotion_COBRE[['Subject ID', 'mean FD_Power']]
+
+scale_data['ID'] = pd.DataFrame(scale_data['ID'], dtype=np.int32)
+demographic_COBRE = pd.merge(scale_data, headmotion_COBRE, left_on='ID', right_on='Subject ID', how='inner')
+demographic_COBRE = demographic_COBRE[['ID', 'Current Age', 'Gender', 'mean FD_Power']]
+
+site_COBRE = pd.DataFrame(np.ones([len(demographic_COBRE),1]) + 1)
+site_COBRE.columns = ['site']
+
+demographic_COBRE = pd.concat([demographic_COBRE, site_COBRE], axis=1).drop([70,82])
+demographic_COBRE['Gender'] = demographic_COBRE['Gender']  == 'Male'
+demographic_COBRE[['Current Age', 'Gender']]  = np.int32(demographic_COBRE[['Current Age', 'Gender']] )
+demographic_COBRE.columns = ['ID', 'Age', 'Sex', 'MeanFD', 'Site']
 
 #%% -------------------------UCLA----------------------------------
-matroot = r'D:\WorkStation_2018\WorkStation_CNN_Schizo\Data\SelectedFC_UCLA'
+matroot = r'D:\WorkStation_2018\SZ_classification\Data\SelectedFC_UCLA'
 scale = r'H:\Data\精神分裂症\ds000030\schizophrenia_UCLA_restfmri\participants.tsv'
+headmotion_UCAL = r'D:\WorkStation_2018\SZ_classification\Data\headmotion\ucal\HeadMotion.tsv'
+headmotion_UCAL_rest = r'D:\WorkStation_2018\SZ_classification\Data\headmotion\ucal\HeadMotion_rest.tsv'
 
 allmatname = os.listdir(matroot)
 allmatname = pd.DataFrame(allmatname)
@@ -102,10 +168,45 @@ scale_data_UCAL['diagnosis'][scale_data_UCAL['diagnosis'] == 'CONTROL']=0
 scale_data_UCAL['diagnosis'][scale_data_UCAL['diagnosis'] == 'SCHZ']=1
 scale_data_UCAL['participant_id'] = scale_data_UCAL['participant_id'].str.replace('sub-', '')
 scale_data_UCAL = pd.merge(allsubjname,scale_data_UCAL, left_on=0, right_on=0, how='inner')
-scale_data_UCAL = scale_data_UCAL.iloc[:,[2,3,4]]
-scale_data_UCAL['gender'] = scale_data_UCAL['gender'].str.replace('m', '1')
-scale_data_UCAL['gender'] = scale_data_UCAL['gender'].str.replace('f', '0')
+scale_data_UCAL = scale_data_UCAL.iloc[:,[1,2,3,4]]
+scale_data_UCAL['gender'] = scale_data_UCAL['gender'].str.replace('M', '1')
+scale_data_UCAL['gender'] = scale_data_UCAL['gender'].str.replace('F', '0')
 scale_data_UCAL = pd.DataFrame(scale_data_UCAL, dtype=np.float64)
 describe_age_UCAL = scale_data_UCAL.groupby('diagnosis')['age'].describe()
 describe_sex_UCAL = scale_data_UCAL.groupby('diagnosis')['gender'].value_counts()
-#%%--------------------------------------------------------------------
+
+headmotion1_UCAL = pd.read_csv(headmotion_UCAL, sep='\t', index_col=False)[['Subject ID', 'mean FD_Power']]
+headmotion1_UCAL['Subject ID'] = headmotion1_UCAL['Subject ID'].str.findall(r'[1-9]\d*')
+headmotion1_UCAL['Subject ID'] = [np.int32(idx[0]) for idx in headmotion1_UCAL['Subject ID']]
+headmotion2_UCAL = pd.read_csv(headmotion_UCAL_rest, sep='\t', index_col=False)[['Subject ID', 'mean FD_Power']]
+headmotion_UCAL = pd.concat([headmotion1_UCAL, headmotion2_UCAL])
+
+demographic_UCAL = pd.merge(scale_data_UCAL, headmotion_UCAL, left_on='participant_id', right_on='Subject ID')
+demographic_UCAL = demographic_UCAL.drop(columns=['Subject ID', 'diagnosis'])
+
+site_UCAL = pd.DataFrame(np.ones([len(demographic_UCAL), 1])+2)
+
+demographic_UCAL = pd.concat([demographic_UCAL, site_UCAL], axis=1)
+demographic_UCAL.columns = ['ID', 'Age', 'Sex', 'MeanFD', 'Site']
+
+
+#%% Load all npy
+dataset1_file = r'D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\dataset_550.npy'
+dataset2_file = r'D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\dataset_206.npy'
+dataset_COBRE_file = r'D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\dataset_COBRE.npy'
+dataset_UCAL_file = r'D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\dataset_UCLA.npy'
+
+dataset1 = np.load(dataset1_file)
+dataset2 = np.load(dataset2_file)
+dataset_COBRE = np.load(dataset_COBRE_file)
+dataset_UCAL = np.load(dataset_UCAL_file)
+
+#%% Sort demogrphic data with npy
+demographic_all = pd.concat([demographic_dataset1, demographic_dataset2, demographic_COBRE, demographic_UCAL], axis=0)
+dataset_all = np.concatenate([dataset1, dataset2, dataset_COBRE, dataset_UCAL], axis=0)
+
+dataset_all = pd.DataFrame(dataset_all)
+
+demographic_all = pd.merge(dataset_all, demographic_all, left_on=0, right_on='ID', how='inner')[['ID', 'Current Age', 'Gender', 'mean FD_Power']]
+
+demographic_all.to_excel(r'D:\WorkStation_2018\SZ_classification\Scale\demographic_all.xlsx', index=None)

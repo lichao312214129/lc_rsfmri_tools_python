@@ -14,17 +14,18 @@ function lc_roi_segmentation_special_clustering(varargin)
 %           [--out_dir, -od]: output directory
 %           [--n_workers, -nw]: How many threads(CPU) to use.
 %           [--n_replicate, -nr]  Number of times to repeat clustering using new initial cluster centroid positions, default is 100.
-%           [--is_pca, -ip] Whether perform PCA to reduce dimension, default is 1,
+%           [--is_pca, -ip] Whether perform PCA to reduce dimension,
+%           default is 1, 0 OR 1
 %           [--explained_cov, -ec]: how many explained variance to retain, default is 0.90, range = (0, 1]
 %
 % OUTPUT:
 %       All subject level segmentation and one group level segmentation.
 % EXAMPLE 1 :
-% lc_roi_segmentation_special_clustering('-dd', 'D:\workstation_b\ZhangYue_Guangdongshengzhongyiyuan\signals',...
+% lc_roi_segmentation_special_clustering('-dd', 'D:\workstation_b\ZhangYue_Guangdongshengzhongyiyuan\data',...
 %                           '-rs', 'D:\workstation_b\ZhangYue_Guangdongshengzhongyiyuan\Amygdala_3_3_3.nii',...
 %                           '-ns', 3,... 
 %                            '-nr', 500,...
-%                            '-ip',1,...
+%                            '-ip',0,...
 %                            '-ec', 0.80,... 
 %                           '-mf', 'D:\workstation_b\ZhangYue_Guangdongshengzhongyiyuan\sorted_brainnetome_atalas_3mm.nii',...
 %                           '-od', 'D:\workstation_b\ZhangYue_Guangdongshengzhongyiyuan');
@@ -141,7 +142,7 @@ data_target = y_Read(datafile_path{1});
 data_target = reshape(data_target, dim1*dim2*dim3, [])';
 roi_signal = data_target(:, roi_mask);
 non_roi_signal = data_target(:, (~roi_mask) & mask);
-W_all = zeros(size(roi_signal, 2), size(roi_signal, 2));
+fc_all = zeros(size(roi_signal, 2), size(roi_signal, 2));
 
 try
     parpool(n_workers)
@@ -165,16 +166,25 @@ for i = 1:n_sub
     % Extract non-roi signals
     non_roi_signal = data_target(:, (~roi_mask) & mask);
     
-    % Fillmissing
+    % Fillmissing of roi signals
     roi_signal(isinf(roi_signal)) = NaN;
     non_roi_signal(isinf(non_roi_signal)) = NaN;
     x = 1:size(roi_signal);
     [roi_signal_intered,~] = fillmissing(roi_signal,'linear','SamplePoints',x);
     [non_roi_signal_intered, ~] =  fillmissing(non_roi_signal,'linear','SamplePoints',x);
 
+    % Step 3 is to calculate the partial correlations
+    fc = corr(roi_signal_intered, non_roi_signal_intered, 'Type','Pearson', 'rows', 'pairwise');
+
+    % Fillmissing of roi signals
+    fc(isinf(fc)) = NaN;
+    x = 1:size(fc, 2);
+    [fc,~] = fillmissing(fc','linear','SamplePoints',x);
+    fc = fc';
+    
     % PCA
     if is_pca
-        [COEFF, non_roi_signal_intered_reduced,~,~,explained] = pca(non_roi_signal_intered);
+        [~, fc_reduced,~,~,explained] = pca(fc);
         n_comp = numel(explained);
         cum_ex_list = zeros(n_comp, 1);
         cum_ex = 0;
@@ -183,18 +193,25 @@ for i = 1:n_sub
             cum_ex_list(j) = cum_ex;
         end
         loc_cutoff_cum_ex = find(cum_ex_list >= explained_cov*100);
-        loc_cutoff_cum_ex = loc_cutoff_cum_ex(1);
-        non_roi_signal_intered_reduced = non_roi_signal_intered_reduced(:,1:loc_cutoff_cum_ex);
+        if numel(loc_cutoff_cum_ex) >= 1
+            loc_cutoff_cum_ex = loc_cutoff_cum_ex(1);
+            fc_reduced = fc_reduced(:,1:loc_cutoff_cum_ex);
+        else
+            fc_reduced = fc;
+        end
     else
-        non_roi_signal_intered_reduced = non_roi_signal_intered;
+        fc_reduced = fc;
     end
     
-    % Step 3 is to calculate the partial correlations
-    fc = corr(roi_signal_intered, non_roi_signal_intered_reduced, 'Type','Pearson', 'rows', 'pairwise');
+    fc_reduced(isnan(fc_reduced)) = 0;
+    fc_reduced(isinf(fc_reduced)) = 1;
+    W = corr(fc_reduced');
     
-    fc(isnan(fc)) = 0;
-    fc(isinf(fc)) = 1;
-    W = corr(fc');
+    if i == 1
+        fc_all = fc;
+    else
+        fc_all = cat(1, fc_all, fc);
+    end
 
     idx = special_clustering(W, num_of_subregion, n_replicate);
     idx_all(:,i) = idx;
@@ -208,14 +225,38 @@ for i = 1:n_sub
     y_Write(segmentation_3d, header, fullfile(out_dir, [sub_name, '.nii']));
 end
 
+clear fc_reduced idx roi_signal_intered data_target
+
 % Group segmentation
-% save(fullfile(out_dir,'idx_group.mat'), 'idx_all');
+% PCA
+if is_pca
+    [~, fc_all_reduced,~,~,explained] = pca(fc_all);
+    n_comp = numel(explained);
+    cum_ex_list = zeros(n_comp, 1);
+    cum_ex = 0;
+    for j = 1:n_comp
+        cum_ex = cum_ex + explained(j);
+        cum_ex_list(j) = cum_ex;
+    end
+    loc_cutoff_cum_ex = find(cum_ex_list >= explained_cov*100);
+    loc_cutoff_cum_ex = loc_cutoff_cum_ex(1);
+    fc_all_reduced = fc_all_reduced(:,1:loc_cutoff_cum_ex);
+else
+    fc_all_reduced = fc_all;
+end
+
+W_all = corr(fc_all_reduced')';
+idx_all = special_clustering(W_all, num_of_subregion, n_replicate);
+idx_all = reshape(idx_all, [],n_sub);
+save(fullfile(out_dir,'idx_group.mat'), 'idx_all');
 n_voxel_in_roi = size(roi_signal, 2);
 idx_subgoup = 1:num_of_subregion;
 idx_group = zeros(n_voxel_in_roi,1);
+freq_all = cell(n_voxel_in_roi,1);
 for i = 1:n_voxel_in_roi
     comp = arrayfun(@(x) idx_all(i,:)-x, idx_subgoup, 'UniformOutput', false);
     freq = cell2mat(cellfun(@(x) sum(x==0)/n_sub, comp, 'UniformOutput', false));
+    freq_all{i} = freq;
     ig = find(freq==max(freq));
     randig = randperm(numel(ig));
     randig = randig(1);
