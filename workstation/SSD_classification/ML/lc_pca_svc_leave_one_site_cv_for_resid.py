@@ -24,13 +24,14 @@ import matplotlib.pyplot as plt
 from eslearn.feature_engineering.feature_preprocessing import el_preprocessing
 from eslearn.feature_engineering.feature_reduction import el_dimreduction
 from eslearn.model_evaluation.el_evaluation_model_performances import eval_performance
+from eslearn.utils.lc_read_write_mat import read_mat, write_mat
 
 
 class SVCRFECV():
     """
     Parameters:
     ----------
-        dataset_our_center_550 : path str
+        resid_all : path str
             path of dataset 1
             NOTE: The first column of the dataset is subject unique index, the second is the diagnosis label(0/1),
             the rest of columns are features. The other dataset are the same as this dataset.
@@ -66,6 +67,7 @@ class SVCRFECV():
          dataset_206=r'D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\dataset_206.npy',
          dataset_COBRE=r'D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\dataset_COBRE.npy',
          dataset_UCAL=r'D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\dataset_UCLA.npy',
+         resid_all=r'D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\resid_all.mat',
          is_dim_reduction=True,
          components=0.95,
          cv=5
@@ -75,7 +77,8 @@ class SVCRFECV():
         sel.dataset_206 = dataset_206
         sel.data_COBRE = dataset_COBRE
         sel.data_UCAL = dataset_UCAL
-
+        
+        sel.resid_all = resid_all
         sel.is_dim_reduction = is_dim_reduction
         sel.components = components
         sel.cv = cv
@@ -87,13 +90,20 @@ class SVCRFECV():
         uid_206, feature_206, label_206 = sel._load_data(sel.dataset_206)
         uid_COBRE, feature_COBRE, label_COBRE = sel._load_data(sel.data_COBRE)
         uid_UCAL, feature_UCAL, label_UCAL = sel._load_data(sel.data_UCAL)
-        uid_all = np.concatenate([uid_550, uid_206, uid_COBRE, uid_UCAL])
-        feature_all = [feature_550, feature_206, feature_COBRE, feature_UCAL]
-        sel.label_all = [label_550, label_206, label_COBRE, label_UCAL]
+        feature_all_fc = [feature_550, feature_206, feature_COBRE, feature_UCAL]
+        
+        data_all = read_mat(sel.resid_all)
+        uid_all = data_all[:,0]
+        site = data_all[:,2]
+        sel.label_all = [data_all[:,1][site==0], data_all[:,1][site==1], data_all[:,1][site==2], data_all[:,1][site==3]]
+        feature_all_tmp = data_all[:,3:]
+        feature_all_cov = [feature_all_tmp[site==0,:], feature_all_tmp[site==1,:], feature_all_tmp[site==2,:], feature_all_tmp[site==3,:]]
+        
+        feature_all = [np.concatenate([ffc, fcov], axis=1) for (ffc, fcov) in zip(feature_all_fc, feature_all_cov)]
         name = ['550','206','COBRE','UCLA']
 
         # Leave one site CV
-        n_site = len(sel.label_all)
+        n_site = len(feature_all)
         test_index = np.array([], dtype=np.int16)
         sel.decision = np.array([], dtype=np.int16)
         sel.prediction = np.array([], dtype=np.int16)
@@ -113,7 +123,7 @@ class SVCRFECV():
             # Resampling training data
             # feature_train, label_train = sel.re_sampling(feature_train, label_train)
             # Normalization
-            prep = el_preprocessing.Preprocessing(data_preprocess_method='StandardScaler', data_preprocess_level='subject')
+            prep = el_preprocessing.Preprocessing(data_preprocess_method='StandardScaler', data_preprocess_level='group')
             feature_train, feature_test = prep.data_preprocess(feature_train, feature_test)
 
             # Dimension reduction
@@ -172,16 +182,8 @@ class SVCRFECV():
         print(sorted(Counter(label_resampled).items()))
         return feature_resampled, label_resampled
 
-    def dimReduction(sel, train_X, test_X, pca_n_component):
-        train_X, trained_pca = dimreduction.pca(train_X, pca_n_component)
-        test_X = trained_pca.transform(test_X)
-        return train_X, test_X, trained_pca
-
     def training(sel, train_X, train_y, cv):
-        # svm GrigCV
         svc = svm.LinearSVC(class_weight='balanced')
-        # svc = svm.SVC(class_weight='balanced')
-        # svc = GridSearchCV(svc, param, cv=cv)
         svc.fit(train_X, train_y)
         return svc
 

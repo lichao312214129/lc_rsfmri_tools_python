@@ -1,5 +1,4 @@
-"""
-This script is designed to perform table statistics
+"""This script is designed to perform statistics of demographic information
 """
 
 import pandas as pd
@@ -7,7 +6,7 @@ import numpy as np
 import sys
 sys.path.append(r'D:\My_Codes\LC_Machine_Learning\lc_rsfmri_tools\lc_rsfmri_tools_python')
 import os
-from eslearn.utils.lc_read_write_mat import read_mat
+from eslearn.utils.lc_read_write_mat import read_mat, write_mat
 
 #%% ----------------------------------Our center 550----------------------------------
 uid_path_550 = r'D:\WorkStation_2018\SZ_classification\Scale\selected_550.txt'
@@ -25,7 +24,7 @@ describe_durgnaive_550 = scale_selected_550.groupby('诊断')['用药'].value_co
 describe_sex_550 = scale_selected_550.groupby('诊断')['性别'].value_counts()
 
 # Demographic
-demographic_info_dataset1 = scale_selected_550[['folder','年龄', '性别']]
+demographic_info_dataset1 = scale_selected_550[['folder', '诊断', '年龄', '性别']]
 headmotion = pd.read_excel(headmotion_file)
 headmotion = headmotion[['Subject ID','mean FD_Power']]
 demographic_info_dataset1 = pd.merge(demographic_info_dataset1, headmotion, left_on='folder', right_on='Subject ID', how='inner')
@@ -34,7 +33,8 @@ demographic_info_dataset1 = demographic_info_dataset1.drop(columns=['Subject ID'
 site_dataset1 = pd.DataFrame(np.zeros([len(demographic_info_dataset1),1]))
 site_dataset1.columns = ['site']
 demographic_dataset1 = pd.concat([demographic_info_dataset1 , site_dataset1], axis=1)
-demographic_dataset1.columns = ['ID', 'Age', 'Sex', 'MeanFD', 'Site']
+demographic_dataset1.columns = ['ID','Diagnosis', 'Age', 'Sex', 'MeanFD', 'Site']
+demographic_dataset1['Diagnosis'] = np.int32(demographic_dataset1['Diagnosis'] == 3)
 
 #%% ----------------------------------BeiJing 206----------------------------------
 uid_path_206 = r'D:\WorkStation_2018\SZ_classification\Scale\北大精分人口学及其它资料\SZ_NC_108_100.xlsx'
@@ -74,7 +74,7 @@ uid = pd.DataFrame(scale_data_206['ID'])
 uid['ID'] = uid['ID'].str.replace('NC','10');
 uid['ID'] = uid['ID'].str.replace('SZ','20');
 uid = pd.DataFrame(uid, dtype=np.int32)
-demographic_info_dataset2 = scale_data_206[['age', 'sex']]
+demographic_info_dataset2 = scale_data_206[['group','age', 'sex']]
 demographic_info_dataset2 = pd.concat([uid, demographic_info_dataset2], axis=1)
 
 headmotion_name_dataset2 = os.listdir(headmotion_file_206)
@@ -102,7 +102,8 @@ site_dataset2 = pd.DataFrame(np.ones([len(demographic_dataset2),1]))
 site_dataset2.columns = ['site']
 
 demographic_dataset2 = pd.concat([demographic_dataset2, site_dataset2], axis=1)
-demographic_dataset2.columns = ['ID', 'Age', 'Sex', 'MeanFD', 'Site']
+demographic_dataset2.columns = ['ID', 'Diagnosis', 'Age', 'Sex', 'MeanFD', 'Site']
+demographic_dataset2['Diagnosis'] = np.int32(demographic_dataset2['Diagnosis'] == 1)
 
 #%% -------------------------COBRE----------------------------------
 # Inputs
@@ -142,7 +143,7 @@ headmotion_COBRE = headmotion_COBRE[['Subject ID', 'mean FD_Power']]
 
 scale_data['ID'] = pd.DataFrame(scale_data['ID'], dtype=np.int32)
 demographic_COBRE = pd.merge(scale_data, headmotion_COBRE, left_on='ID', right_on='Subject ID', how='inner')
-demographic_COBRE = demographic_COBRE[['ID', 'Current Age', 'Gender', 'mean FD_Power']]
+demographic_COBRE = demographic_COBRE[['ID', 'Subject Type', 'Current Age', 'Gender', 'mean FD_Power']]
 
 site_COBRE = pd.DataFrame(np.ones([len(demographic_COBRE),1]) + 1)
 site_COBRE.columns = ['site']
@@ -150,7 +151,8 @@ site_COBRE.columns = ['site']
 demographic_COBRE = pd.concat([demographic_COBRE, site_COBRE], axis=1).drop([70,82])
 demographic_COBRE['Gender'] = demographic_COBRE['Gender']  == 'Male'
 demographic_COBRE[['Current Age', 'Gender']]  = np.int32(demographic_COBRE[['Current Age', 'Gender']] )
-demographic_COBRE.columns = ['ID', 'Age', 'Sex', 'MeanFD', 'Site']
+demographic_COBRE.columns = ['ID', 'Diagnosis', 'Age', 'Sex', 'MeanFD', 'Site']
+demographic_COBRE['Diagnosis'] = np.int32(demographic_COBRE['Diagnosis'] == 'Patient')
 
 #%% -------------------------UCLA----------------------------------
 matroot = r'D:\WorkStation_2018\SZ_classification\Data\SelectedFC_UCLA'
@@ -175,19 +177,19 @@ scale_data_UCAL = pd.DataFrame(scale_data_UCAL, dtype=np.float64)
 describe_age_UCAL = scale_data_UCAL.groupby('diagnosis')['age'].describe()
 describe_sex_UCAL = scale_data_UCAL.groupby('diagnosis')['gender'].value_counts()
 
-headmotion1_UCAL = pd.read_csv(headmotion_UCAL, sep='\t', index_col=False)[['Subject ID', 'mean FD_Power']]
+headmotion1_UCAL = pd.read_csv(headmotion_UCAL, sep='\t', index_col=False)[['Subject ID','mean FD_Power']]
 headmotion1_UCAL['Subject ID'] = headmotion1_UCAL['Subject ID'].str.findall(r'[1-9]\d*')
 headmotion1_UCAL['Subject ID'] = [np.int32(idx[0]) for idx in headmotion1_UCAL['Subject ID']]
 headmotion2_UCAL = pd.read_csv(headmotion_UCAL_rest, sep='\t', index_col=False)[['Subject ID', 'mean FD_Power']]
 headmotion_UCAL = pd.concat([headmotion1_UCAL, headmotion2_UCAL])
 
 demographic_UCAL = pd.merge(scale_data_UCAL, headmotion_UCAL, left_on='participant_id', right_on='Subject ID')
-demographic_UCAL = demographic_UCAL.drop(columns=['Subject ID', 'diagnosis'])
+demographic_UCAL = demographic_UCAL.drop(columns=['Subject ID'])
 
 site_UCAL = pd.DataFrame(np.ones([len(demographic_UCAL), 1])+2)
 
 demographic_UCAL = pd.concat([demographic_UCAL, site_UCAL], axis=1)
-demographic_UCAL.columns = ['ID', 'Age', 'Sex', 'MeanFD', 'Site']
+demographic_UCAL.columns = ['ID', 'Diagnosis', 'Age', 'Sex', 'MeanFD', 'Site']
 
 
 #%% Load all npy
@@ -204,9 +206,9 @@ dataset_UCAL = np.load(dataset_UCAL_file)
 #%% Sort demogrphic data with npy
 demographic_all = pd.concat([demographic_dataset1, demographic_dataset2, demographic_COBRE, demographic_UCAL], axis=0)
 dataset_all = np.concatenate([dataset1, dataset2, dataset_COBRE, dataset_UCAL], axis=0)
-
+write_mat(r'D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\dataset_all.mat',dataset_name='dataset_all', dataset=dataset_all)
 dataset_all = pd.DataFrame(dataset_all)
 
-demographic_all = pd.merge(dataset_all, demographic_all, left_on=0, right_on='ID', how='inner')[['ID', 'Current Age', 'Gender', 'mean FD_Power']]
+demographic_all = pd.merge(dataset_all, demographic_all, left_on=0, right_on='ID', how='inner')[['ID', 'Diagnosis', 'Age', 'Sex', 'MeanFD', 'Site']]
 
 demographic_all.to_excel(r'D:\WorkStation_2018\SZ_classification\Scale\demographic_all.xlsx', index=None)
