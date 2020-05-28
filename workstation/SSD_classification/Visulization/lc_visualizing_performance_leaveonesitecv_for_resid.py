@@ -23,7 +23,7 @@ from eslearn.utils.lc_evaluation_model_performances import eval_performance
 
 #%% Inputs
 scale_550_file = r'D:\WorkStation_2018\SZ_classification\Scale\10-24大表.xlsx'
-classification_results_resid_leave_one_site_cv_file = r'D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\results_leave_one_site_cv_resid.npy'
+classification_results_resid_leave_one_site_cv_file = r'D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\results_LOSOCV_regressout_site1.npy'
 classification_results_leave_one_site_cv_file = r'D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\results_leave_one_site_cv.npy'
 
 is_plot = 1
@@ -37,8 +37,6 @@ results_resid_leave_one_site_cv = np.load(classification_results_resid_leave_one
 results_special_resid = results_resid_leave_one_site_cv['special_result']
 results_special_resid = pd.DataFrame(results_special_resid)
 results_special_resid.iloc[:, 0] = np.int32(results_special_resid.iloc[:, 0])
-
-
 
 # Filter subjects that have .mat files
 scale_550_selected_resid = pd.merge(results_special_resid, scale_550, left_on=0, right_on='folder', how='inner')
@@ -98,8 +96,6 @@ results_leave_one_site_cv = np.load(classification_results_leave_one_site_cv_fil
 results_special = results_leave_one_site_cv['special_result']
 results_special = pd.DataFrame(results_special)
 results_special.iloc[:, 0] = np.int32(results_special.iloc[:, 0])
-
-
 
 # Filter subjects that have .mat files
 scale_550_selected = pd.merge(results_special, scale_550, left_on=0, right_on='folder', how='inner')
@@ -200,8 +196,8 @@ ax1=plt.bar(
         acc_firstepisode_medicated_SSD_550_18_resid, 
         acc_first_episode_unmedicated_SSD_550_18_resid,
     ], 
-    color=['r'],
-    alpha=0.5)
+    # color=['b'],
+    alpha=0.4)
 
 ax2 = plt.bar(
     [1, 3.5, 6, 8.5, 11, 13.5 ], 
@@ -213,18 +209,24 @@ ax2 = plt.bar(
         acc_firstepisode_medicated_SSD_550_18, 
         acc_first_episode_unmedicated_SSD_550_18
     ], 
-    color=['b'],
-    alpha=0.5)
-
+    color=['g'],
+    alpha=0.4)
+plt.grid(axis='y')
 
 plt.yticks(fontsize=12)
 plt.xticks([0.5, 3, 5.5, 8, 10.5, 13], ['Accuracy', 'Sensitivity','Specificity', 'Sensitivity of chronic SSD', 'Sensitivity of first episode medicated SSD', 'Sensitivity of first episode unmedicated SSD'], rotation=45, ha="right")  
-plt.legend([ax1, ax2], ['Added covariates', 'Without covariates'])
+plt.legend([ax1, ax2], ['Regressed out site and covariates', 'Without regression'], loc='upper right')
 
 plt.subplots_adjust(wspace = 0.5, hspace =1)
 plt.tight_layout()
-pdf = PdfPages(r'D:\WorkStation_2018\SZ_classification\Figure\Processed\with_without_cov.pdf')
+# pdf = PdfPages(r'D:\WorkStation_2018\SZ_classification\Figure\Processed\Regressed_covariates.pdf')
 pdf.savefig()
 pdf.close()
 plt.show()
 print('-'*50)
+
+
+#%% Correlation between duration and age
+age_duration = scale_550_selected[['年龄','病程月']].dropna()
+np.corrcoef(age_duration.T)
+

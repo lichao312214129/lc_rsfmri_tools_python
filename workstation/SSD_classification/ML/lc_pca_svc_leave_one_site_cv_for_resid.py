@@ -67,8 +67,8 @@ class SVCRFECV():
          dataset_206=r'D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\dataset_206.npy',
          dataset_COBRE=r'D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\dataset_COBRE.npy',
          dataset_UCAL=r'D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\dataset_UCLA.npy',
-         resid_all=r'D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\resid_all.mat',
-         is_dim_reduction=True,
+         resid_all=r'D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\site_sex_age_motion.mat',
+         is_dim_reduction=False,
          components=0.95,
          cv=5
     ):
@@ -86,20 +86,20 @@ class SVCRFECV():
     def main_svc_rfe_cv(sel):
         print('Training model and testing...\n')
         # Load data
-        uid_550, feature_550, label_550 = sel._load_data(sel.dataset_our_center_550)
-        uid_206, feature_206, label_206 = sel._load_data(sel.dataset_206)
-        uid_COBRE, feature_COBRE, label_COBRE = sel._load_data(sel.data_COBRE)
-        uid_UCAL, feature_UCAL, label_UCAL = sel._load_data(sel.data_UCAL)
-        feature_all_fc = [feature_550, feature_206, feature_COBRE, feature_UCAL]
+        # uid_550, feature_550, label_550 = sel._load_data(sel.dataset_our_center_550)
+        # uid_206, feature_206, label_206 = sel._load_data(sel.dataset_206)
+        # uid_COBRE, feature_COBRE, label_COBRE = sel._load_data(sel.data_COBRE)
+        # uid_UCAL, feature_UCAL, label_UCAL = sel._load_data(sel.data_UCAL)
+        # feature_all_fc = [feature_550, feature_206, feature_COBRE, feature_UCAL]
         
         data_all = read_mat(sel.resid_all)
         uid_all = data_all[:,0]
         site = data_all[:,2]
         sel.label_all = [data_all[:,1][site==0], data_all[:,1][site==1], data_all[:,1][site==2], data_all[:,1][site==3]]
-        feature_all_tmp = data_all[:,3:]
-        feature_all_cov = [feature_all_tmp[site==0,:], feature_all_tmp[site==1,:], feature_all_tmp[site==2,:], feature_all_tmp[site==3,:]]
+        feature_all_tmp = data_all[:,[7,8,9]]
+        feature_all = [feature_all_tmp[site==0,:], feature_all_tmp[site==1,:], feature_all_tmp[site==2,:], feature_all_tmp[site==3,:]]
         
-        feature_all = [np.concatenate([ffc, fcov], axis=1) for (ffc, fcov) in zip(feature_all_fc, feature_all_cov)]
+        # feature_all = [np.concatenate([ffc, fcov], axis=1) for (ffc, fcov) in zip(feature_all_fc, feature_all_cov)]
         name = ['550','206','COBRE','UCLA']
 
         # Leave one site CV
@@ -183,7 +183,7 @@ class SVCRFECV():
         return feature_resampled, label_resampled
 
     def training(sel, train_X, train_y, cv):
-        svc = svm.LinearSVC(class_weight='balanced')
+        svc = svm.LinearSVC(class_weight='balanced', random_state=0)
         svc.fit(train_X, train_y)
         return svc
 
@@ -208,10 +208,10 @@ if __name__ == '__main__':
     clf = SVCRFECV()
     results = clf.main_svc_rfe_cv()
 
-    clf.save_fig(r'D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\performances_leave_one_site_cv_resid.pdf')
+    clf.save_fig(r'D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\performances_LOSOCV_regressout_site1.pdf')
     
     results = results.__dict__
-    clf.save_results(results, r'D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\results_leave_one_site_cv_resid.npy')
+    clf.save_results(results, r'D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\results_LOSOCV_regressout_site1.npy')
 
     print(np.mean(clf.accuracy))
     print(np.std(clf.accuracy))

@@ -36,6 +36,8 @@ demographic_dataset1 = pd.concat([demographic_info_dataset1 , site_dataset1], ax
 demographic_dataset1.columns = ['ID','Diagnosis', 'Age', 'Sex', 'MeanFD', 'Site']
 demographic_dataset1['Diagnosis'] = np.int32(demographic_dataset1['Diagnosis'] == 3)
 
+demographic_duration_dataset1 = pd.merge(scale_selected_550[['folder','病程月']],demographic_dataset1, left_on='folder', right_on='ID').dropna()
+np.corrcoef(demographic_duration_dataset1['病程月'], demographic_duration_dataset1['Age'])
 #%% ----------------------------------BeiJing 206----------------------------------
 uid_path_206 = r'D:\WorkStation_2018\SZ_classification\Scale\北大精分人口学及其它资料\SZ_NC_108_100.xlsx'
 scale_path_206 = r'D:\WorkStation_2018\SZ_classification\Scale\北大精分人口学及其它资料\SZ_NC_108_100-WF.csv'
@@ -105,11 +107,16 @@ demographic_dataset2 = pd.concat([demographic_dataset2, site_dataset2], axis=1)
 demographic_dataset2.columns = ['ID', 'Diagnosis', 'Age', 'Sex', 'MeanFD', 'Site']
 demographic_dataset2['Diagnosis'] = np.int32(demographic_dataset2['Diagnosis'] == 1)
 
+duration_dataset2 = pd.concat([uid, scale_data_206['duration']], axis=1)
+demographic_duration_dataset2 = pd.merge(duration_dataset2, demographic_dataset2, left_on='ID', right_on='ID')
+demographic_duration_dataset2 = demographic_duration_dataset2.iloc[:106,:]
+np.corrcoef(demographic_duration_dataset2['duration'], demographic_duration_dataset2['Age'])
 #%% -------------------------COBRE----------------------------------
 # Inputs
 matroot = r'D:\WorkStation_2018\SZ_classification\Data\SelectedFC_COBRE'  # all mat files directory
 scale = r'H:\Data\精神分裂症\COBRE\COBRE_phenotypic_data.csv'  # whole scale path
 headmotion_file_COBRE = r'D:\WorkStation_2018\SZ_classification\Data\headmotion\cobre\HeadMotion.tsv'
+duration_COBRE = r'D:\WorkStation_2018\SZ_classification\Scale\COBRE_duration.xlsx'
 
 # Transform the .mat files to one .npy file
 allmatname = os.listdir(matroot)
@@ -153,6 +160,19 @@ demographic_COBRE['Gender'] = demographic_COBRE['Gender']  == 'Male'
 demographic_COBRE[['Current Age', 'Gender']]  = np.int32(demographic_COBRE[['Current Age', 'Gender']] )
 demographic_COBRE.columns = ['ID', 'Diagnosis', 'Age', 'Sex', 'MeanFD', 'Site']
 demographic_COBRE['Diagnosis'] = np.int32(demographic_COBRE['Diagnosis'] == 'Patient')
+
+duration_COBRE = pd.read_excel(duration_COBRE)
+duration_COBRE = duration_COBRE.iloc[:,[0,1,2]]
+duration_COBRE = duration_COBRE.dropna()
+duration_COBRE = pd.DataFrame(duration_COBRE, dtype=np.int32)
+duration_COBRE[duration_COBRE == 9999] = None
+duration_COBRE = duration_COBRE.dropna()
+duration_COBRE['duration'] = duration_COBRE.iloc[:,1] - duration_COBRE.iloc[:,2]
+duration_COBRE['duration']  =duration_COBRE['duration'] * 12
+duration_COBRE.columns = ['ID', 'Age', 'Onset_age', 'Duration']
+demographic_druation_COBRE = pd.merge(demographic_COBRE, duration_COBRE, left_on='ID', right_on='ID', how='inner')
+
+np.corrcoef(demographic_druation_COBRE['Duration'], demographic_druation_COBRE ['Age_x'])
 
 #%% -------------------------UCLA----------------------------------
 matroot = r'D:\WorkStation_2018\SZ_classification\Data\SelectedFC_UCLA'
@@ -212,3 +232,11 @@ dataset_all = pd.DataFrame(dataset_all)
 demographic_all = pd.merge(dataset_all, demographic_all, left_on=0, right_on='ID', how='inner')[['ID', 'Diagnosis', 'Age', 'Sex', 'MeanFD', 'Site']]
 
 demographic_all.to_excel(r'D:\WorkStation_2018\SZ_classification\Scale\demographic_all.xlsx', index=None)
+
+
+#%% Correlation of duration and age
+duration_age_dataset1 = demographic_duration_dataset1[['病程月','Age']].values
+duration_age_dataset2 = demographic_duration_dataset2[['duration','Age']].values
+duration_age_dataset_COBRE = demographic_druation_COBRE[['Duration','Age_x']].values
+duration_age_all = np.concatenate([duration_age_dataset1, duration_age_dataset2, duration_age_dataset_COBRE])
+np.corrcoef(duration_age_all.T)

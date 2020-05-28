@@ -179,7 +179,7 @@ class SVCRFECV():
 
     def training(sel, train_X, train_y, cv):
         # svm GrigCV
-        svc = svm.LinearSVC(class_weight='balanced')
+        svc = svm.LinearSVC(class_weight='balanced', random_state=0)
         # svc = svm.SVC(class_weight='balanced')
         # svc = GridSearchCV(svc, param, cv=cv)
         svc.fit(train_X, train_y)
@@ -206,10 +206,10 @@ if __name__ == '__main__':
     clf = SVCRFECV()
     results = clf.main_svc_rfe_cv()
 
-    clf.save_fig(r'D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\performances_leave_one_site_cv_resid.pdf')
+    clf.save_fig(r'D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\performances_withoutpca_LOSOCV.pdf')
     
     results = results.__dict__
-    clf.save_results(results, r'D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\results_leave_one_site_cv_resid.npy')
+    clf.save_results(results, r'D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\results_leave_one_site_cv.npy')
 
     print(np.mean(clf.accuracy))
     print(np.std(clf.accuracy))
