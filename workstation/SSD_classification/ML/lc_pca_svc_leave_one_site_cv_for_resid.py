@@ -67,8 +67,8 @@ class SVCRFECV():
          dataset_206=r'D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\dataset_206.npy',
          dataset_COBRE=r'D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\dataset_COBRE.npy',
          dataset_UCAL=r'D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\dataset_UCLA.npy',
-         resid_all=r'D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\site_sex_age_motion.mat',
-         is_dim_reduction=False,
+         resid_all=r'D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\fc_excluded_greater_fd_and_regressed_out_site_sex_motion.mat',
+         is_dim_reduction=True,
          components=0.95,
          cv=5
     ):
@@ -96,7 +96,7 @@ class SVCRFECV():
         uid_all = data_all[:,0]
         site = data_all[:,2]
         sel.label_all = [data_all[:,1][site==0], data_all[:,1][site==1], data_all[:,1][site==2], data_all[:,1][site==3]]
-        feature_all_tmp = data_all[:,[7,8,9]]
+        feature_all_tmp = data_all[:,3:]
         feature_all = [feature_all_tmp[site==0,:], feature_all_tmp[site==1,:], feature_all_tmp[site==2,:], feature_all_tmp[site==3,:]]
         
         # feature_all = [np.concatenate([ffc, fcov], axis=1) for (ffc, fcov) in zip(feature_all_fc, feature_all_cov)]
@@ -208,10 +208,10 @@ if __name__ == '__main__':
     clf = SVCRFECV()
     results = clf.main_svc_rfe_cv()
 
-    clf.save_fig(r'D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\performances_LOSOCV_regressout_site1.pdf')
+    # clf.save_fig(r'D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\performances_sex_age_motion.pdf')
     
     results = results.__dict__
-    clf.save_results(results, r'D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\results_LOSOCV_regressout_site1.npy')
+    # clf.save_results(results, r'D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\results_fc_excluded_greater_fd_and_regressed_out_site_sex_motion_separately.npy')
 
     print(np.mean(clf.accuracy))
     print(np.std(clf.accuracy))

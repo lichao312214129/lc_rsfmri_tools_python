@@ -1,7 +1,7 @@
-function cluster_hydra_for_zhangyue(varargin)
-% CLUSTER_HYDRA_FOR_ZHANGYUE
-% Usage 1: cluster_hydra_for_zhangyue('--patient_dir', $your_patient_dir, '--hc_dir', $your_hc_dir, '--feature_type', $your_feature_type)
-% Usage 2: cluster_hydra_for_zhangyue('-pd', $your_patient_dir, '-hd', $your_hc_dir, '-ft', $your_feature_type)
+function lc_cluster_hydra(varargin)
+% lc_cluster_hydra
+% Usage 1: lc_cluster_hydra('--patient_dir', $your_patient_dir, '--hc_dir', $your_hc_dir, '--feature_type', $your_feature_type)
+% Usage 2: lc_cluster_hydra('-pd', $your_patient_dir, '-hd', $your_hc_dir, '-ft', $your_feature_type)
 % ----------------------------------------------------------------------------
 % INPUT:
 %       REQUIRED:
@@ -24,7 +24,7 @@ function cluster_hydra_for_zhangyue(varargin)
 %       ARI: adjusted rand index measuring the overlap/reproducibility of clustering solutions across folds
 %       subtype_index: cell array, each cell contains a index of one cluster
 % EXAMPLE:
-% cluster_hydra_for_zhangyue('-pd', 'D:\workstation_b\ZhangYue_Guangdongshengzhongyiyuan\data_clustering\Patient',...
+% lc_cluster_hydra('-pd', 'D:\workstation_b\ZhangYue_Guangdongshengzhongyiyuan\data_clustering\Patient',...
 %                           '-hd', 'D:\workstation_b\ZhangYue_Guangdongshengzhongyiyuan\data_clustering\HC',... 
 %                           '-ft', 'fc',...
 %                           '-od', 'D:\workstation_b\ZhangYue_Guangdongshengzhongyiyuan\data_clustering',...
@@ -42,7 +42,7 @@ function cluster_hydra_for_zhangyue(varargin)
 
 % HELP
 if nargin == 0
-    help cluster_hydra_for_zhangyue
+    help lc_cluster_hydra
     return
 end
 

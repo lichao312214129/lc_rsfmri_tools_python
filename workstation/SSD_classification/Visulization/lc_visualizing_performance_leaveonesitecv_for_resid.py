@@ -23,7 +23,7 @@ from eslearn.utils.lc_evaluation_model_performances import eval_performance
 
 #%% Inputs
 scale_550_file = r'D:\WorkStation_2018\SZ_classification\Scale\10-24大表.xlsx'
-classification_results_resid_leave_one_site_cv_file = r'D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\results_LOSOCV_regressout_site1.npy'
+classification_results_resid_leave_one_site_cv_file = r'D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\results_fc_excluded_greater_fd_and_regressed_out_site_sex_motion.npy'
 classification_results_leave_one_site_cv_file = r'D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\results_leave_one_site_cv.npy'
 
 is_plot = 1
@@ -215,7 +215,7 @@ plt.grid(axis='y')
 
 plt.yticks(fontsize=12)
 plt.xticks([0.5, 3, 5.5, 8, 10.5, 13], ['Accuracy', 'Sensitivity','Specificity', 'Sensitivity of chronic SSD', 'Sensitivity of first episode medicated SSD', 'Sensitivity of first episode unmedicated SSD'], rotation=45, ha="right")  
-plt.legend([ax1, ax2], ['Regressed out site and covariates', 'Without regression'], loc='upper right')
+plt.legend([ax1, ax2], ['Regressed out site, sex and head motion', 'Without regression'], loc='upper right')
 
 plt.subplots_adjust(wspace = 0.5, hspace =1)
 plt.tight_layout()
@@ -224,6 +224,22 @@ pdf.savefig()
 pdf.close()
 plt.show()
 print('-'*50)
+
+
+ax1=plt.bar(
+    [0,1,2,3,4,5], [
+        accuracy_resid, 
+        sensitivity_resid, 
+        specificity_resid, 
+        acc_chronic_medicated_SSD_550_18_resid, 
+        acc_firstepisode_medicated_SSD_550_18_resid, 
+        acc_first_episode_unmedicated_SSD_550_18_resid,
+    ], 
+    # color=['b'],
+    alpha=0.4)
+plt.yticks(fontsize=12)
+plt.xticks([0,1,2,3,4,5],['Accuracy', 'Sensitivity','Specificity', 'Sensitivity of chronic SSD', 'Sensitivity of first episode medicated SSD', 'Sensitivity of first episode unmedicated SSD'], rotation=45, ha="right")  
+plt.legend([ax1, ax2], ['Regressed out site, sex and head motion', 'Without regression'], loc='upper right')
 
 
 #%% Correlation between duration and age

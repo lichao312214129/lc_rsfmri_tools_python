@@ -277,24 +277,79 @@ resid_all(loc_hc,:) = resid_hc;
 resid_all = cat(2, data(:,1:2), demographic(:,[6]), resid_all);
 save('D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\resid_all.mat', 'resid_all');
 
-
 %% GLM all
+
+% Inputs
+data_file = 'D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\dataset_all.mat';
+demographic_file = 'D:\WorkStation_2018\SZ_classification\Scale\demographic_all.xlsx';
+% Load
+data = importdata(data_file);
+[demographic, header] = xlsread(demographic_file);
+demographic(:,4) = demographic(:,4) == 1;
+
+% Exclude subjects with greater head motion
+loc_acceptable_headmotion = demographic(:,5)<=0.3;
+demographic = demographic(loc_acceptable_headmotion,:);
+data = data(loc_acceptable_headmotion,:);
+
+% Regress 
 site_design = zeros(size(demographic,1),4);
 for i = 1:4
     site_design(:,i) = demographic(:,end) == i-1;
 end
 
-independent_variables_all = cat(2,site_design, demographic(:,[4]));
+independent_variables_all = cat(2,site_design, demographic(:,[4 5]));
 beta_value_all = independent_variables_all\data(:,3:end);
 resid_all =  data(:,3:end) - independent_variables_all*beta_value_all;
 
-beta_value_all = demographic(:,[3 5])\resid_all;
-resid_all = resid_all -demographic(:,[3 5])*beta_value_all;
+% beta_value_all = demographic(:,[3 5])\resid_all;
+% resid_all = resid_all -demographic(:,[3 5])*beta_value_all;
 
 % Get residual error
-resid_all = cat(2,site_design, demographic(:,[3 4 5]));
+% resid_all = cat(2,site_design, demographic(:,[3 4 5]));
 resid_all = cat(2, data(:,1:2),demographic(:,end), resid_all);
-save('D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\site_sex_age_motion.mat', 'resid_all');
+save('D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\fc_excluded_greater_fd_and_regressed_out_site_sex_motion.mat', 'resid_all');
+
+%% GLM on training data and applied to test data(Exclude subjects with greater head motion)
+% Inputs
+data_file = 'D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\dataset_all.mat';
+demographic_file = 'D:\WorkStation_2018\SZ_classification\Scale\demographic_all.xlsx';
+% Load
+data = importdata(data_file);
+[demographic, header] = xlsread(demographic_file);
+demographic(:,4) = demographic(:,4) == 1;
+
+% Exclude subjects with greater head motion
+loc_acceptable_headmotion = demographic(:,5)<=0.3;
+demographic = demographic(loc_acceptable_headmotion,:);
+data = data(loc_acceptable_headmotion,:);
+site_design = zeros(size(demographic,1),4);
+for i = 1:4
+    site_design(:,i) = demographic(:,end) == i-1;
+end
+loc_train = demographic(:,end) ~=0;
+
+% Fit site
+indep_site = site_design(loc_train,:);
+dep = data(loc_train,:);
+dep = dep(:,3:end);
+beta_value_site_train = indep_site\dep;
+resid_train =  dep - indep_site*beta_value_site_train;
+
+indep_sex_headmotion_train = demographic(:,[4 5]);
+indep_sex_headmotion_train = indep_sex_headmotion_train(loc_train,:);
+
+% Fit sex and headmotion
+beta_value_sex_headmotion_train = indep_sex_headmotion_train\resid_train;
+
+% Regress out for all subjects
+resid_all = data(:,3:end) - site_design*beta_value_site_train;
+resid_all = resid_all - demographic(:,[4 5])*beta_value_sex_headmotion_train;
+
+% Concat
+resid_all = cat(2, data(:,1:2),demographic(:,end), resid_all);
+save('D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\fc_excluded_greater_fd_and_regressed_out_site_sex_motion_separately.mat', 'resid_all');
+
 
 %% Compare
 independent_variables_all = demographic(:,end);
@@ -309,12 +364,27 @@ contrast = [0 0 0 0 0 0 1];
 test_type = 'ftest';
 [tstat,pvalue, beta_value] = el_glm(design, dependent_variables_all, contrast, test_type);
 
-
 %% Compare age, sex, headmotion between patients and hc
 loc_p_site1 = (demographic(:,2)==1) & (demographic(:,6)==0);
 loc_c_site1 = (demographic(:,2)==0) & (demographic(:,6)==0);
 loc_p_site234 = (demographic(:,2)==1) & (demographic(:,6)~=0);
 loc_c_site234 = (demographic(:,2)==0) & (demographic(:,6)~=0);
+
+% Age
+age = demographic(:,3);
+age_p_site1 = age(loc_p_site1);
+age_c_site1 = age(loc_c_site1);
+
+age_p_site234 = age(loc_p_site234);
+age_c_site234 = age(loc_c_site234);
+
+[h,p,ci, tstat] = ttest2(age_p_site1, age_c_site1);
+[h,p,ci, tstat] = ttest2(age_p_site234, age_c_site234);
+
+save('D:\WorkStation_2018\SZ_classification\Scale\age_p_site1', 'age_p_site1');
+save('D:\WorkStation_2018\SZ_classification\Scale\age_c_site1', 'age_c_site1');
+save('D:\WorkStation_2018\SZ_classification\Scale\age_p_site234', 'age_p_site234');
+save('D:\WorkStation_2018\SZ_classification\Scale\age_c_site234', 'age_c_site234');
 
 % Sex
 sex = demographic(:,4);
@@ -335,13 +405,19 @@ sex_c_all = cat(1, sex_c_site1, sex_c_site234);
 [p, Q]= chi2test_LiuFeng([sum(sex_p_site234==1), sum(sex_p_site234==0);...
                         sum(sex_c_site234==1), sum(sex_c_site234==0)]); % Site 2 3 4 
                     
-
 [p, Q]= chi2test_LiuFeng([sum(sex_p_all==1), sum(sex_p_all==0);...
                         sum(sex_c_all==1), sum(sex_c_all==0)]); % Site 1 2 3 4 
 
 [p, Q]= chi2test_LiuFeng([sum(sex_site1==1), sum(sex_site1==0);...
                     sum(sex_site234==1), sum(sex_site234==0)]); % Site 1 2 3 4 
                 
+
+
+save('D:\WorkStation_2018\SZ_classification\Scale\sex_p_site1', 'sex_p_site1');
+save('D:\WorkStation_2018\SZ_classification\Scale\sex_c_site1', 'sex_c_site1');
+save('D:\WorkStation_2018\SZ_classification\Scale\sex_p_site234', 'sex_p_site234');
+save('D:\WorkStation_2018\SZ_classification\Scale\sex_c_site234', 'sex_c_site234');
+
 % Proportion of patients and healthy controls of each site
 loc_site1 = demographic(:,6)==0;
 loc_site2 = demographic(:,6)==1;
@@ -381,11 +457,18 @@ headmotion_c_site1 = headmotion(loc_c_site1);
 headmotion_c_site2 = headmotion(loc_c_site2);
 headmotion_c_site3 = headmotion(loc_c_site3);
 headmotion_c_site4 = headmotion(loc_c_site4);
+headmotion_p_site234 = headmotion(loc_p_site234);
+headmotion_c_site234 = headmotion(loc_c_site234);
 
 [h,p,ci, tstat] = ttest2(headmotion_p_site1, headmotion_c_site1);
 [h,p,ci, tstat] = ttest2(headmotion_p_site2, headmotion_c_site2);
 [h,p,ci, tstat] = ttest2(headmotion_p_site3, headmotion_c_site3);
 [h,p,ci, tstat] = ttest2(headmotion_p_site4, headmotion_c_site4);
+[h,p,ci, tstat] = ttest2(headmotion_p_site234, headmotion_c_site234);
 
+save('D:\WorkStation_2018\SZ_classification\Scale\headmotion_p_site1', 'headmotion_p_site1');
+save('D:\WorkStation_2018\SZ_classification\Scale\headmotion_c_site1', 'headmotion_c_site1');
+save('D:\WorkStation_2018\SZ_classification\Scale\headmotion_p_site234', 'headmotion_p_site234');
+save('D:\WorkStation_2018\SZ_classification\Scale\headmotion_c_site234', 'headmotion_c_site234');
 %% Take cov as features
 cov = cat(2, data, demographic(:,[3,4,5]));
