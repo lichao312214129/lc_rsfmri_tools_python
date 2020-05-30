@@ -3,6 +3,9 @@
 
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from scipy.stats import pearsonr,spearmanr,kendalltau
 import sys
 sys.path.append(r'D:\My_Codes\LC_Machine_Learning\lc_rsfmri_tools\lc_rsfmri_tools_python')
 import os
@@ -24,7 +27,7 @@ describe_durgnaive_550 = scale_selected_550.groupby('诊断')['用药'].value_co
 describe_sex_550 = scale_selected_550.groupby('诊断')['性别'].value_counts()
 
 # Demographic
-demographic_info_dataset1 = scale_selected_550[['folder', '诊断', '年龄', '性别']]
+demographic_info_dataset1 = scale_selected_550[['folder', '诊断', '年龄', '性别', '病程月']]
 headmotion = pd.read_excel(headmotion_file)
 headmotion = headmotion[['Subject ID','mean FD_Power']]
 demographic_info_dataset1 = pd.merge(demographic_info_dataset1, headmotion, left_on='folder', right_on='Subject ID', how='inner')
@@ -32,12 +35,16 @@ demographic_info_dataset1 = demographic_info_dataset1.drop(columns=['Subject ID'
 
 site_dataset1 = pd.DataFrame(np.zeros([len(demographic_info_dataset1),1]))
 site_dataset1.columns = ['site']
-demographic_dataset1 = pd.concat([demographic_info_dataset1 , site_dataset1], axis=1)
-demographic_dataset1.columns = ['ID','Diagnosis', 'Age', 'Sex', 'MeanFD', 'Site']
+demographic_dataset1_all = pd.concat([demographic_info_dataset1 , site_dataset1], axis=1)
+demographic_dataset1_all.columns = ['ID','Diagnosis', 'Age', 'Sex', 'Duration', 'MeanFD', 'Site']
+demographic_dataset1 = demographic_dataset1_all[['ID','Diagnosis', 'Age', 'Sex', 'MeanFD', 'Site']]
 demographic_dataset1['Diagnosis'] = np.int32(demographic_dataset1['Diagnosis'] == 3)
 
-demographic_duration_dataset1 = pd.merge(scale_selected_550[['folder','病程月']],demographic_dataset1, left_on='folder', right_on='ID').dropna()
-np.corrcoef(demographic_duration_dataset1['病程月'], demographic_duration_dataset1['Age'])
+# Duration and age
+demographic_duration_dataset1 = demographic_dataset1_all[['Duration', 'Age']].dropna()
+np.corrcoef(demographic_duration_dataset1['Duration'], demographic_duration_dataset1['Age'])
+pearsonr(demographic_duration_dataset1['Duraton'], demographic_duration_dataset1['Age'])
+
 #%% ----------------------------------BeiJing 206----------------------------------
 uid_path_206 = r'D:\WorkStation_2018\SZ_classification\Scale\北大精分人口学及其它资料\SZ_NC_108_100.xlsx'
 scale_path_206 = r'D:\WorkStation_2018\SZ_classification\Scale\北大精分人口学及其它资料\SZ_NC_108_100-WF.csv'
@@ -110,7 +117,8 @@ demographic_dataset2['Diagnosis'] = np.int32(demographic_dataset2['Diagnosis'] =
 duration_dataset2 = pd.concat([uid, scale_data_206['duration']], axis=1)
 demographic_duration_dataset2 = pd.merge(duration_dataset2, demographic_dataset2, left_on='ID', right_on='ID')
 demographic_duration_dataset2 = demographic_duration_dataset2.iloc[:106,:]
-np.corrcoef(demographic_duration_dataset2['duration'], demographic_duration_dataset2['Age'])
+pearsonr(demographic_duration_dataset2['duration'], demographic_duration_dataset2['Age'])
+
 #%% -------------------------COBRE----------------------------------
 # Inputs
 matroot = r'D:\WorkStation_2018\SZ_classification\Data\SelectedFC_COBRE'  # all mat files directory
@@ -172,7 +180,8 @@ duration_COBRE['duration']  =duration_COBRE['duration'] * 12
 duration_COBRE.columns = ['ID', 'Age', 'Onset_age', 'Duration']
 demographic_druation_COBRE = pd.merge(demographic_COBRE, duration_COBRE, left_on='ID', right_on='ID', how='inner')
 
-np.corrcoef(demographic_druation_COBRE['Duration'], demographic_druation_COBRE ['Age_x'])
+# Correattion of duration and age
+pearsonr(demographic_druation_COBRE['Duration'], demographic_druation_COBRE ['Age_x'])
 
 #%% -------------------------UCLA----------------------------------
 matroot = r'D:\WorkStation_2018\SZ_classification\Data\SelectedFC_UCLA'
@@ -239,4 +248,36 @@ duration_age_dataset1 = demographic_duration_dataset1[['病程月','Age']].value
 duration_age_dataset2 = demographic_duration_dataset2[['duration','Age']].values
 duration_age_dataset_COBRE = demographic_druation_COBRE[['Duration','Age_x']].values
 duration_age_all = np.concatenate([duration_age_dataset1, duration_age_dataset2, duration_age_dataset_COBRE])
-np.corrcoef(duration_age_all.T)
+group = np.concatenate([np.ones(len(duration_age_dataset1,))+100, np.ones(len(duration_age_dataset2,))+1000, np.ones(len(duration_age_dataset_COBRE,))+10000])
+duration_age_all = pd.concat([pd.DataFrame(duration_age_all), pd.DataFrame(group)], axis=1)
+duration_age_all.columns = ['Duration', 'Age', 'Dataset']
+duration_age_all['Dataset'] = [str(int(g)) for g in duration_age_all['Dataset']]
+duration_age_all['Dataset'] = duration_age_all['Dataset'].str.replace('101','Dataset 1')
+duration_age_all['Dataset'] = duration_age_all['Dataset'].str.replace('1001','Dataset 2')
+duration_age_all['Dataset'] = duration_age_all['Dataset'].str.replace('10001','Dataset 3')
+
+# plot scatter of duration and age
+pearsonr(duration_age_all['Duration'], duration_age_all['Age'])
+g = sns.jointplot('Duration', 'Age', data=duration_age_all,col='Dataset',
+                  kind="reg", truncate=False, height=7)
+
+ax = sn.lmplot('Duration', 'Age', data=duration_age_all, col='Dataset')
+ax = sn.lmplot('Duration', 'Age', data=duration_age_all)
+ax.set_titles(fontsize=20, fontweight='bold')
+
+plt.tight_layout()
+pdf = PdfPages(r'D:\WorkStation_2018\SZ_classification\Figure\Processed\correlation_duration_age_all.pdf')
+pdf.savefig()
+pdf.close()
+plt.show()
+print('-'*50)
+
+
+# sns.jointplot(duration_age_all['Duration'][duration_age_all['Dataset']=='Dataset 1'], duration_age_all['Age'][duration_age_all['Dataset']=='Dataset 1'],
+#               kind="reg", truncate=False, height=7, xlim=(0, duration_age_all['Duration'][duration_age_all['Dataset']=='Dataset 1'].max()))
+
+# sns.jointplot(duration_age_all['Duration'][duration_age_all['Dataset']=='Dataset 2'], duration_age_all['Age'][duration_age_all['Dataset']=='Dataset 2'],
+#               kind="reg", truncate=False, height=7, xlim=(0, duration_age_all['Duration'][duration_age_all['Dataset']=='Dataset 2'].max()))
+
+# sns.jointplot(duration_age_all['Duration'][duration_age_all['Dataset']=='Dataset 3'], duration_age_all['Age'][duration_age_all['Dataset']=='Dataset 3'],
+#               kind="reg", truncate=False, height=7, xlim=(0, duration_age_all['Duration'][duration_age_all['Dataset']=='Dataset 3'].max()))

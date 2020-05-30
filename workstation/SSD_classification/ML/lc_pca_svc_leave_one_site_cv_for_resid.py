@@ -67,7 +67,7 @@ class SVCRFECV():
          dataset_206=r'D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\dataset_206.npy',
          dataset_COBRE=r'D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\dataset_COBRE.npy',
          dataset_UCAL=r'D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\dataset_UCLA.npy',
-         resid_all=r'D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\fc_excluded_greater_fd_and_regressed_out_site_sex_motion.mat',
+         resid_all=r'D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\fc_excluded_greater_fd_and_regressed_out_site_sex_motion_all.mat',
          is_dim_reduction=True,
          components=0.95,
          cv=5
@@ -208,10 +208,10 @@ if __name__ == '__main__':
     clf = SVCRFECV()
     results = clf.main_svc_rfe_cv()
 
-    # clf.save_fig(r'D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\performances_sex_age_motion.pdf')
+    clf.save_fig(r'D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\performances_fc_excluded_greater_fd_and_regressed_out_site_sex_motion_all.pdf')
     
     results = results.__dict__
-    # clf.save_results(results, r'D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\results_fc_excluded_greater_fd_and_regressed_out_site_sex_motion_separately.npy')
+    clf.save_results(results, r'D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\results_fc_excluded_greater_fd_and_regressed_out_site_sex_motion_all.npy')
 
     print(np.mean(clf.accuracy))
     print(np.std(clf.accuracy))

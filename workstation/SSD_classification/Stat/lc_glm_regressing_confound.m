@@ -277,7 +277,7 @@ resid_all(loc_hc,:) = resid_hc;
 resid_all = cat(2, data(:,1:2), demographic(:,[6]), resid_all);
 save('D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\resid_all.mat', 'resid_all');
 
-%% GLM all
+%% GLM all (Excluded subjects with greater head motion)
 
 % Inputs
 data_file = 'D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\dataset_all.mat';
@@ -308,9 +308,9 @@ resid_all =  data(:,3:end) - independent_variables_all*beta_value_all;
 % Get residual error
 % resid_all = cat(2,site_design, demographic(:,[3 4 5]));
 resid_all = cat(2, data(:,1:2),demographic(:,end), resid_all);
-save('D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\fc_excluded_greater_fd_and_regressed_out_site_sex_motion.mat', 'resid_all');
+save('D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\fc_excluded_greater_fd_and_regressed_out_site_sex_motion_all.mat', 'resid_all');
 
-%% GLM on training data and applied to test data(Exclude subjects with greater head motion)
+%% GLM of site, sex and headmotionon training data and applied to test data(Exclude subjects with greater head motion)
 % Inputs
 data_file = 'D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\dataset_all.mat';
 demographic_file = 'D:\WorkStation_2018\SZ_classification\Scale\demographic_all.xlsx';
@@ -350,6 +350,32 @@ resid_all = resid_all - demographic(:,[4 5])*beta_value_sex_headmotion_train;
 resid_all = cat(2, data(:,1:2),demographic(:,end), resid_all);
 save('D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\fc_excluded_greater_fd_and_regressed_out_site_sex_motion_separately.mat', 'resid_all');
 
+%% GLM of sex and headmotion on training data and applied to test data(Exclude subjects with greater head motion)
+% Inputs
+data_file = 'D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\dataset_all.mat';
+demographic_file = 'D:\WorkStation_2018\SZ_classification\Scale\demographic_all.xlsx';
+% Load
+data = importdata(data_file);
+[demographic, header] = xlsread(demographic_file);
+demographic(:,4) = demographic(:,4) == 1;
+
+% Exclude subjects with greater head motion
+loc_acceptable_headmotion = demographic(:,5)<=0.3;
+demographic = demographic(loc_acceptable_headmotion,:);
+data = data(loc_acceptable_headmotion,:);
+loc_train = demographic(:,end) ~=0;
+
+% Fit sex and headmotion
+indep_age_sex_headmotion_train = demographic(:,[4 5]);
+dep_age_sex_headmotion_train = data(:,3:end);
+beta_value_age_sex_headmotion_train = indep_age_sex_headmotion_train\dep_age_sex_headmotion_train;
+
+% Regress out for all subjects
+resid_all = data(:,3:end) - indep_age_sex_headmotion_train*beta_value_age_sex_headmotion_train;
+
+% Concat
+resid_all = cat(2, data(:,1:2),demographic(:,end), resid_all);
+save('D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\fc_excluded_greater_fd_and_regressed_out_sex_motion_separately.mat', 'resid_all');
 
 %% Compare
 independent_variables_all = demographic(:,end);
