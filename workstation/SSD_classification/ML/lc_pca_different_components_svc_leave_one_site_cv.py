@@ -207,7 +207,7 @@ if __name__ == '__main__':
     # clf.save_fig(r'D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\performances_pca05_svc_leave_one_site_cv.pdf')
     
     results = results.__dict__
-    clf.save_results(results, r'D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\results_pca1_svc_leave_one_site_cv.npy')
+    clf.save_results(results, r'D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\results_pca99_svc_leave_one_site_cv.npy')
 
     print(np.mean(clf.accuracy))
     print(np.std(clf.accuracy))

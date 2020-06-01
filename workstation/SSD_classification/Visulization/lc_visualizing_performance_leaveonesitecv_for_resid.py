@@ -176,7 +176,7 @@ ax2 = plt.bar(
     ], 
     color=['green'],
     alpha=0.4)
-plt.grid(axis='x')
+plt.grid(axis='y')
 
 plt.yticks(fontsize=12)
 plt.xticks([0.5, 3, 5.5, 8, 10.5, 13], ['Accuracy', 'Sensitivity','Specificity', 'Sensitivity of chronic SSD', 'Sensitivity of first episode medicated SSD', 'Sensitivity of first episode unmedicated SSD'], rotation=45, ha="right")  
@@ -184,7 +184,7 @@ plt.legend([ax1, ax2], ['Correction pooled all datasets', 'Correction in trainin
 
 plt.subplots_adjust(wspace = 0.5, hspace =1)
 plt.tight_layout()
-pdf = PdfPages(r'D:\WorkStation_2018\SZ_classification\Figure\Processed\Correaction of site and cov.pdf')
+# pdf = PdfPages(r'D:\WorkStation_2018\SZ_classification\Figure\Processed\Correaction of site and cov.pdf')
 pdf.savefig()
 pdf.close()
 plt.show()

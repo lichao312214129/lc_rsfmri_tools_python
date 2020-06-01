@@ -205,21 +205,21 @@ if is_plot:
     sensitivity_pooling = results_pooling['sensitivity']
     specificity_pooling = results_pooling['specificity']
     AUC_pooling = results_pooling['AUC']
-    performances_pooling = [accuracy_pooling, sensitivity_pooling, specificity_pooling, AUC_pooling]
+    performances_pooling = [accuracy_pooling, sensitivity_pooling, specificity_pooling]
     performances_pooling = pd.DataFrame(performances_pooling)
 
     accuracy_leave_one_site_cv = results_leave_one_site_cv['accuracy']
     sensitivity_leave_one_site_cv = results_leave_one_site_cv['sensitivity']
     specificity_leave_one_site_cv = results_leave_one_site_cv['specificity']
     AUC_leave_one_site_cv = results_leave_one_site_cv['AUC']
-    performances_leave_one_site_cv = [accuracy_leave_one_site_cv, sensitivity_leave_one_site_cv, specificity_leave_one_site_cv, AUC_leave_one_site_cv]
+    performances_leave_one_site_cv = [accuracy_leave_one_site_cv, sensitivity_leave_one_site_cv, specificity_leave_one_site_cv]
     performances_leave_one_site_cv = pd.DataFrame(performances_leave_one_site_cv)
 
     accuracy_feu = results_feu['accuracy']
     sensitivity_feu = results_feu['sensitivity']
     specificity_feu = results_feu['specificity']
     AUC_feu = results_feu['AUC']
-    performances_feu = [accuracy_feu, sensitivity_feu, specificity_feu, AUC_feu]
+    performances_feu = [accuracy_feu, sensitivity_feu, specificity_feu]
     performances_feu = pd.DataFrame(performances_feu)
     
     # Save weights to .mat file for visulazation using MATLAB.
@@ -244,198 +244,30 @@ if is_plot:
 
     # Bar: performances in the whole Dataset.
     import seaborn as sns
-    plt.figure(figsize=(20,20))
+    plt.figure(figsize=(8,6))
     all_mean = np.concatenate([np.mean(performances_pooling.values,1), np.mean(performances_leave_one_site_cv.values,1), np.mean(performances_feu.values,1)])
     error = np.concatenate([np.std(performances_pooling.values, 1), np.std(performances_leave_one_site_cv.values, 1), np.std(performances_feu.values, 1)])
 
-    plt.subplot(2, 1, 1)
-    color = ['darkturquoise'] * 4 +  ['paleturquoise'] * 4 + ['lightblue'] * 4
+    color = ['darkturquoise'] * 3 +  ['paleturquoise'] * 3 + ['lightblue'] * 3
     plt.bar(np.arange(0,len(all_mean)), all_mean, yerr = error, 
             capsize=5, linewidth=2, color=color)
-    plt.tick_params(labelsize=20)
-    plt.xticks(np.arange(0,len(all_mean)), ['Accuracy', 'Sensitivity', 'Sensitivity', 'AUC'] * 3, fontsize=20, rotation=45)
-    plt.title('Classification performances', fontsize=25, fontweight='bold')
+    plt.tick_params(labelsize=10)
+    plt.xticks(np.arange(0,len(all_mean)), ['Accuracy', 'Sensitivity', 'Sensitivity'] * 3, fontsize=10, rotation=45, ha='right')
+    plt.title('Classification performances', fontsize=15, fontweight='bold')
     y_major_locator=MultipleLocator(0.1)
     ax = plt.gca()
     ax.yaxis.set_major_locator(y_major_locator)
-    ax.spines['top'].set_visible(False)
-    ax.spines['right'].set_visible(False)
     plt.grid(axis='y')
-    plt.fill_between(np.linspace(-0.4,3.4), 0.95, 1.08, color='darkturquoise')
-    plt.fill_between(np.linspace(3.6, 7.4), 0.95, 1.08, color='paleturquoise')
-    plt.fill_between(np.linspace(7.6, 11.4), 0.95, 1.08, color='lightblue')
-    ax=plt.gca()
-    ax.spines['bottom'].set_linewidth(2)
-    ax.spines['left'].set_linewidth(2)
+    plt.fill_between(np.linspace(-0.4,2.4), 1.01, 1.08, color='darkturquoise')
+    plt.fill_between(np.linspace(2.6, 5.4), 1.01, 1.08, color='paleturquoise')
+    plt.fill_between(np.linspace(5.6, 8.4), 1.01, 1.08, color='lightblue')
 
-                   
-    # Bar: Dataset 1
-    plt.subplot(2,1,2)
-    barcont_550 = [
-        acc_firstepisode_SZ_550, acc_not_firstepisode_SZ_550,
-        acc_schizophreniform_550, acc_shortduration_550, acc_longduration_550, 
-        acc_young_onsetage_550, acc_old_onsetage_550, 
-        acc_medicated_SSD_550, acc_ummedicated_SSD_550, acc_unmedicated_schizophreniform_550, 
-        acc_unmedicated_SZ_550, acc_firstepisode_unmedicated_SZ_550, acc_chronic_unmedicated_SZ_550
-    ]
-
-    label_550 = ['First episode SZ', 'Recurrent SZ', 'Schizophreniform', 'Short duration SZ', 'Long duration SZ',
-                'Young onset age SSD','Elder onset age SSD', 
-                'Medicated SSD', 'Unmedicated SSD', 
-                'Unmedicated schizophreniform', 'Unmedicated SZ', 'First episode unmedicated SZ', 'Recurrent unmedicated SZ']
-
-    samplesize_550 = [
-        data_firstepisode_SZ_550.shape[0], data_not_firstepisode_SZ_550.shape[0],
-        data_schizophreniform_550.shape[0], data_shortdurationSZ_550.shape[0], data_longdurationSZ_550.shape[0], 
-        data_young_onset_age_550.shape[0], data_old_onset_age_550.shape[0], 
-        data_medicated_SSD_550.shape[0], data_unmedicated_SSD_550.shape[0], data_unmedicated_schizophreniform_550.shape[0], 
-        data_unmedicated_SZ_550.shape[0], data_firstepisode_unmedicated_SZ_550.shape[0], data_chronic_unmedicated_SZ_550.shape[0]
-    ]
-
-
-    mean_550 = [
-        0, 0, 0, 
-        data_shortdurationSZ_550['病程月'].mean(), data_longdurationSZ_550['病程月'].mean(), 
-        data_young_onset_age_550['Age_of_first_episode'].mean(), data_old_onset_age_550['Age_of_first_episode'].mean(), 
-         0, 0, 0, 
-        0, 0, 0
-    ]
-
-    std_550 = [
-        0, 0, 0, 
-        data_shortdurationSZ_550['病程月'].std(), data_longdurationSZ_550['病程月'].std(), 
-        data_young_onset_age_550['Age_of_first_episode'].std(), data_old_onset_age_550['Age_of_first_episode'].std(), 
-         0, 0, 0, 
-        0, 0, 0
-    ] 
-
-
-    # Bar: Dataset 2
-    barcont_206 = [
-        acc_firstepisode_206, acc_notfirstepisode_206,
-        acc_shortduration_206, acc_longduration_206, 
-        acc_young_onsetage_206, acc_old_onsetage_206,
-        acc_drugless_206, acc_drugmore_206
-    ]
-
-    label_206 = [
-        'First episode SZ', 'Recurrent SZ', 'Short duration SZ', 'Long duration SZ',
-        'Young onset age SZ','Elder onset age SZ', 
-        'Small dosage SZ', 'Larger dosage SZ', 
-    ]
-
-    samplesize_206 = [
-        data_firstepisode_206.shape[0], data_notfirstepisode_206.shape[0],
-        data_shortduration_206.shape[0], data_longduration_206.shape[0], 
-        data_young_onsetage_206.shape[0], data_old_onsetage_206.shape[0],
-        data_drugless_206.shape[0], data_drugmore_206.shape[0]
-    ]     
-
-    mean_206 = [
-        0, 0,
-        data_shortduration_206['duration'].mean(), data_longduration_206['duration'].mean(), 
-        data_young_onsetage_206['onsetage'].mean(), data_old_onsetage_206['onsetage'].mean(),
-        data_drugless_206['CPZ_eq'].mean(), data_drugmore_206['CPZ_eq'].mean()
-    ] 
-    
-    std_206 = [
-        0, 0,
-        data_shortduration_206['duration'].std(), data_longduration_206['duration'].std(), 
-        data_young_onsetage_206['onsetage'].std(), data_old_onsetage_206['onsetage'].std(),
-        data_drugless_206['CPZ_eq'].std(), data_drugmore_206['CPZ_eq'].std()
-    ]
-
-    ## Plot
-    barcont_all = barcont_206 + barcont_550
-    label_all = label_206 + label_550 
-    mean_all = mean_206 + mean_550
-    std_all = std_206 + std_550
-    samplesize_all = samplesize_206 + samplesize_550
-    color_206 = ['lightblue' for i in range(len(label_206))] 
-    color_550 = ['darkturquoise' for i in range(len(label_550))]
-    # h = plt.barh(np.arange(0, len(barcont_all)), barcont_all, color=color)
-    
-    h206 = plt.barh(np.arange(0, len(barcont_206)), barcont_206, color=color_206)
-    h550 = plt.barh(np.arange(len(barcont_206), len(barcont_206) + len(barcont_550)), barcont_550, color=color_550)
-    plt.legend([h550, h206], ['Dataset 1', 'Dataset 2'], fontsize=20)
-    
-    plt.tick_params(labelsize=20)
-    plt.yticks(np.arange(0,len(barcont_all)), label_all, fontsize=20, rotation=0)
-    plt.title('Sensitivity of each subgroup of SSD in dataset 1 and dateset 2', fontsize=25, fontweight='bold')
-
-    x_major_locator=MultipleLocator(0.1)
-    ax = plt.gca()
-    ax.xaxis.set_major_locator(x_major_locator)
-    ax.spines['top'].set_visible(False)
-    ax.spines['right'].set_visible(False)
-    plt.xlabel('Sensitivity', fontsize=25) 
-    plt.grid(axis='x')
-    xticks = ax.get_xticks()
-    yticks = ax.get_yticks()
-    for i, (y, x, n, m, s) in enumerate(zip(yticks, barcont_all, samplesize_all, mean_all, std_all)):
-        p, _, _, _ = lc_binomialtest(n, np.int(n * x), 0.5, 0.5)
-        
-        if m: plt.text(0.101, y-0.3, f'mean={m:.1f}({s:.1f})', fontsize=15)
-        plt.text(0.31, y-0.3, 'N = %.0f' % n, fontsize=15)
-        if np.isin(i, (20, 19, 18, 17, 16)):
-            plt.text(0.41, y-0.3, 'P = %.3f' % p, fontsize=16, color='k', fontweight='bold')
-            plt.text(x+0.01, y-0.3, '%.2f' % x,fontsize=16, color='k', fontweight='bold')
-        else:
-            plt.text(0.41, y-0.3, 'P = %.3f' % p, fontsize=15)
-            plt.text(x+0.01, y-0.3, '%.2f' % x,fontsize=15)
-
-    #%% Save to PDF format
+    # Save to PDF format
     if is_savefig & is_plot:
         plt.tight_layout()
-        plt.subplots_adjust(left=0.25, wspace = 0.5, hspace = 0.5)  # wspace 左右
+        plt.subplots_adjust(wspace = 0.5, hspace = 0.5)  # wspace 左右
         pdf = PdfPages(r'D:\WorkStation_2018\SZ_classification\Figure\Classification_performances_all_cutoff' + str(duration) + '.pdf')
         pdf.savefig()
         pdf.close()
     plt.show()
-
-#%% Head motion
-is_savefig_headmotion = 1
-
-mean_meanFD_550 = [
-    data_firstepisode_SZ_550['mean FD_Power'].mean(axis=0), data_not_firstepisode_SZ_550['mean FD_Power'].mean(axis=0),
-    data_schizophreniform_550['mean FD_Power'].mean(axis=0), data_shortdurationSZ_550['mean FD_Power'].mean(axis=0), data_longdurationSZ_550['mean FD_Power'].mean(axis=0), 
-    data_young_onset_age_550['mean FD_Power'].mean(axis=0), data_old_onset_age_550['mean FD_Power'].mean(axis=0), 
-    data_medicated_SSD_550['mean FD_Power'].mean(axis=0), data_unmedicated_SSD_550['mean FD_Power'].mean(axis=0), data_unmedicated_schizophreniform_550['mean FD_Power'].mean(axis=0), 
-    data_unmedicated_SZ_550['mean FD_Power'].mean(axis=0), data_firstepisode_unmedicated_SZ_550['mean FD_Power'].mean(axis=0), data_chronic_unmedicated_SZ_550['mean FD_Power'].mean(axis=0)
-]
-
-std_meanFD_550 = [
-    data_firstepisode_SZ_550['mean FD_Power'].std(), data_not_firstepisode_SZ_550['mean FD_Power'].std(),
-    data_schizophreniform_550['mean FD_Power'].std(), data_shortdurationSZ_550['mean FD_Power'].std(), data_longdurationSZ_550['mean FD_Power'].std(), 
-    data_young_onset_age_550['mean FD_Power'].std(), data_old_onset_age_550['mean FD_Power'].std(), 
-    data_medicated_SSD_550['mean FD_Power'].std(), data_unmedicated_SSD_550['mean FD_Power'].std(), data_unmedicated_schizophreniform_550['mean FD_Power'].std(), 
-    data_unmedicated_SZ_550['mean FD_Power'].std(), data_firstepisode_unmedicated_SZ_550['mean FD_Power'].std(), data_chronic_unmedicated_SZ_550['mean FD_Power'].std()
-]
-  
-meanFD_550 = [
-    data_firstepisode_SZ_550['mean FD_Power'], data_not_firstepisode_SZ_550['mean FD_Power'],
-    data_schizophreniform_550['mean FD_Power'], data_shortdurationSZ_550['mean FD_Power'], data_longdurationSZ_550['mean FD_Power'], 
-    data_young_onset_age_550['mean FD_Power'], data_old_onset_age_550['mean FD_Power'], 
-    data_medicated_SSD_550['mean FD_Power'], data_unmedicated_SSD_550['mean FD_Power'], data_unmedicated_schizophreniform_550['mean FD_Power'], 
-    data_unmedicated_SZ_550['mean FD_Power'], data_firstepisode_unmedicated_SZ_550['mean FD_Power'], data_chronic_unmedicated_SZ_550['mean FD_Power']
-]
-
-f, p = oneway_anova(*meanFD_550)
-ViolinPlot().plot(meanFD_550, ylabel='mean FD', ylabelsize=15, xticklabel=label_550, xticklabel_rotation=45)
-y_major_locator=MultipleLocator(0.05)
-ax = plt.gca()
-ax.yaxis.set_major_locator(y_major_locator)
-ax.spines['top'].set_visible(False)
-ax.spines['right'].set_visible(False)
-ax.spines['bottom'].set_linewidth(2)
-ax.spines['left'].set_linewidth(2)
-
-if is_savefig_headmotion:
-    plt.tight_layout()
-    plt.subplots_adjust(left=0.25, wspace = 0.5, hspace = 0.5)  # wspace 左右
-    pdf = PdfPages(r'D:\WorkStation_2018\SZ_classification\Figure\headmotion_dataset1.pdf')
-    pdf.savefig()
-    pdf.close()
-plt.show()
-        
-
+            
