@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-"""This script is used to get each subgroups' demographic information and visualization
-"""
 
 #%%
 import sys
@@ -287,9 +285,9 @@ for i, df in enumerate(['年龄', '学历（年）', 'BPRS_Total', 'mean FD_Powe
     
 plt.subplots_adjust(wspace = 0.2, hspace =0)
 plt.tight_layout()
-pdf = PdfPages(r'D:\WorkStation_2018\SZ_classification\Figure\Processed\subgroupinfo.pdf')
-pdf.savefig()
-pdf.close()
+# pdf = PdfPages(r'D:\WorkStation_2018\SZ_classification\Figure\Processed\subgroupinfo.pdf')
+# pdf.savefig()
+# pdf.close()
 plt.show()
 
 # plt.figure(figsize=(10,5))

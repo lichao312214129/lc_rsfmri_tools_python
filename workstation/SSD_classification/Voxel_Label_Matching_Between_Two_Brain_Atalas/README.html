@@ -1055,9 +1055,7 @@ body .markdown-body
 .codehilite .vi{color:teal}
 .codehilite .il{color:#009999}
 .codehilite .gc{color:#999;background-color:#EAF2F5}
-</style><title>README</title></head><body><article class="markdown-body"><h1 id="the-codes-in-the-fold-are-used-to-perform-schizophrenia-spectrum-disorder-ssd-classfication">The codes in the fold are used to perform schizophrenia spectrum disorder (SSD) classfication.<a class="headerlink" href="#the-codes-in-the-fold-are-used-to-perform-schizophrenia-spectrum-disorder-ssd-classfication" title="Permanent link"></a></h1>
-<p><font ><strong>Voxel_Label_Matching_Between_Two_Brain_Atalas</strong></font> is used to match the brainnetome atalas to Yeo 7 network atalas.<br />
-<font ><strong>Data_Inspection</strong></font> is used to inspect the features, functional connectivity of the four datasets.  <br />
-<font ><strong>ML</strong></font> is used to perform machine learning.<br />
-<font ><strong>Stat</strong></font> is used to perform statistical analysis.<br />
-<font ><strong>Visulization</strong></font> is used to visulization.   </p></article></body></html>
+</style><title>README</title></head><body><article class="markdown-body"><p><font ><strong>lc_mapping_brainnetome2yeo7.m</strong></font> is used to mapp brainnetome atalas to Yeo 7 network, namely given each voxel in the brainnetome atalas a network label of Yeo 7 networks.  NOTE. The Yeo 7 networks atalas do not have subcortical areas, so the subcortical areas of generated atalas are the same as brainnetome atalas.  </p>
+<p><font ><strong>sorted_brainnetome_atalas_3mm.nii</strong></font> is the mapped brainnetome atalas.  </p>
+<p><font ><strong>netIndex.mat</strong></font> is the network index of sorted_brainnetome_atalas_3mm.nii file. The i-th item is the network index of the i-th node.  </p>
+<p><font ><strong> The 11 brain networks in the order of the sorted_brainnetome_atalas_3mm are {&lsquo;Amyg&rsquo;, &lsquo;BG&rsquo;, &lsquo;Tha&rsquo;, &lsquo;Hipp&rsquo;, &lsquo;Limbic&rsquo;, &lsquo;Visual&rsquo;, &lsquo;SomMot&rsquo;, &lsquo;Control&rsquo;, &lsquo;Default&rsquo;, &lsquo;DorsAttn&rsquo;,  &lsquo;Sal/VentAttn&rsquo;};  </strong></font></p></article></body></html>

@@ -67,7 +67,7 @@ class PCASVCPooling():
                  dataset_206=r'D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\dataset_206.npy',
                  dataset_COBRE=r'D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\dataset_COBRE.npy',
                  dataset_UCAL=r'D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\dataset_UCLA.npy',
-                 resid_all=r'D:\WorkStation_2018\SZ_classification\Data\fc_excluded_greater_fd_and_regressed_out_site_sex_motion_all.mat',
+                 resid_all=r'D:\WorkStation_2018\SZ_classification\Data\ML_data_npy\fc_excluded_greater_fd_and_regressed_out_site_sex_motion_all.mat',
                  n_perm = 500,
                  is_dim_reduction=True,
                  components=0.95,

@@ -185,8 +185,8 @@ plt.legend([ax1, ax2], ['Correction pooled all datasets', 'Correction in trainin
 plt.subplots_adjust(wspace = 0.5, hspace =1)
 plt.tight_layout()
 # pdf = PdfPages(r'D:\WorkStation_2018\SZ_classification\Figure\Processed\Correaction of site and cov.pdf')
-pdf.savefig()
-pdf.close()
+# pdf.savefig()
+# pdf.close()
 plt.show()
 print('-'*50)
 

@@ -1,6 +1,6 @@
-function lc_get_betweengroup_difference()
+function lc_test_medication_and_duration_effect()
 % This function is used to compare the chronic SSD with first episode medicated SSD, 
-% as well as first episode medicated SSD with first episode unmedicated SSDã€?
+% as well as first episode medicated SSD with first episode unmedicated SSD 
 % Statistical method is NBS.
 % Refer and thanks to NBS (NBSglm and NBSstats)
 

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This script is used to get each subgroups' demographic information and visualization
+"""This script is used to visualization for pca with different components
 """
 
 #%%
@@ -298,9 +298,9 @@ plt.title('PCA_95_lr', fontsize=15, fontweight='bold')
 
 plt.subplots_adjust(wspace = 0.5, hspace =1)
 plt.tight_layout()
-pdf = PdfPages(r'D:\WorkStation_2018\SZ_classification\Figure\Processed\other_algorithm.pdf')
-pdf.savefig()
-pdf.close()
+# pdf = PdfPages(r'D:\WorkStation_2018\SZ_classification\Figure\Processed\other_component.pdf')
+# pdf.savefig()
+# pdf.close()
 plt.show()
 print('-'*50)
 

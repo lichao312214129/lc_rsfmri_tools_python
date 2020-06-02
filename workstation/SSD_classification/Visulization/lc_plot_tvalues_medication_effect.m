@@ -1,4 +1,3 @@
-% This script is used to visualize the classification weight using network matrix and circle style.
 %% -----------------------------------------------------------------
 tvalues_medicated = importdata('D:\WorkStation_2018\SZ_classification\Data\Stat_results\tvalue_medication.mat');
 tvalues_duration = importdata('D:\WorkStation_2018\SZ_classification\Data\Stat_results\tvalue_duration.mat');
