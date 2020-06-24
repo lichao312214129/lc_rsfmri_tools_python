@@ -1,0 +1,73 @@
+{
+  "contributors": [
+    {
+      "affiliation": "The University of Washington, eScience Institute",
+      "name": "Kruper, John",
+      "type": "Researcher"
+    },
+    {
+      "affiliation": "The University of Washington, eScience Institute",
+      "name": "Richie-Halford, Adam",
+      "orcid": "0000-0001-9276-9084",
+      "type": "Researcher"
+    },
+    {
+      "affiliation": "Montreal Neurological Institute",
+      "name": "Kiar, Greg",
+      "orcid": "0000-0001-8915-496X",
+      "type": "Researcher"
+    },
+    {
+      "affiliation": "The University of Washington, eScience Institute",
+      "name": "Keshavan, Anisha",
+      "orcid": "0000-0003-3554-043X",
+      "type": "Researcher"
+    },
+    {
+      "affiliation": "Champalimaud Center for the Unknown",
+      "name": "Neto Henriques, Rafael",
+      "type": "Researcher"
+    },
+    {
+      "affiliation": "The University of Washington",
+      "name": "Huber, Libby",
+      "type": "Researcher"
+    },
+    {
+      "name": "Cipollini, Ben",
+      "type": "Researcher"
+    },
+    {
+        "name": "Neef, Andreas",
+        "type": "Researcher"
+    }
+  ],
+  "creators": [
+    {
+      "affiliation": "Stanford University",
+      "name": "Yeatman, Jason",
+      "orcid": "0000-0002-2686-1293"
+    },
+    {
+      "affiliation": "The University of Washington eScience Institute",
+      "name": "Rokem, Ariel",
+      "orcid": "0000-0003-0679-1985"
+    }
+  ],
+  "description": "<p>pyAFQ is a program and software library for analysis of white matter connections in the human brain measured with diffusion MRI</p>",
+  "keywords": [
+    "neuroimaging",
+    "dMRI",
+    "tractography"
+  ],
+  "license": "BSD-3-Clause",
+  "related_identifiers": [
+    {
+      "identifier": "http://yeatmanlab.github.io/pyAFQ",
+      "relation": "isPartOf",
+      "scheme": "url"
+    }
+  ],
+  "title": "pyAFQ: Automated Fiber Quantification in Python",
+  "upload_type": "software"
+}
