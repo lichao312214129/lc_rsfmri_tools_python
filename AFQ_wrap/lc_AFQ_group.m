@@ -50,7 +50,7 @@ numNodes = 100;
 % other statistics
 for jj = 1:20
     TractProfile(jj) = AFQ_TractProfileSet(TractProfile(jj),'vals','pval',p(jj,:));
-    TractProfile(jj) = AFQ_TractProfileSet(TractProfile(jj),'vals','Tstat',Tstats(jj).tstat);
+    TractProfile(jj) = AFQ_TractProfileSet(TractProfile(jj),'vals','Tstat',Tstats(jj,:));
 end
 
 %% Render The tract Profiles of T statistics
@@ -66,11 +66,11 @@ cmap = 'hot';
 % proceedure.
 crange = [1 4];
 % Set the number of fibers to render. More fibers takes longer
-numfibers = 200;
+numfibers = 50;
 % Render the left corticospinal tract (fibers colored light blue) with a
 % Tract Profile of T statistics. Each fiber will have a 1mm radius and the
 % tract profile will have a 6mm radius.
-AFQ_RenderFibers(fg(3),'color',[.8 .8 1],'tractprofile',TractProfile(3),...
+AFQ_RenderFibers(fg(10),'color',[.8 .8 1],'tractprofile',TractProfile(10),...
     'val','Tstat','numfibers',numfibers,'cmap',cmap,'crange',crange,...
     'radius',[1 6]);
 % Add the defining ROIs to the rendering.
