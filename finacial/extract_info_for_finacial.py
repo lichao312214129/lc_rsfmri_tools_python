@@ -29,8 +29,10 @@ class ExtractInfoForFinacial():
         # Load
         if os.path.basename(self.source_file).split('.')[-1] in "xlsx":
             self.source = pd.read_excel(self.source_file, encoding='GB2312')
-        else:
+        elif os.path.basename(self.source_file).split('.')[-1] in "csv":
             self.source = pd.read_csv(self.source_file, encoding='GB2312')
+        else:
+            raise ValueError("Unknown type of source file")
 
         return self
     
