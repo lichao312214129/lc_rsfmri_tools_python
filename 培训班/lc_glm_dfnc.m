@@ -136,7 +136,7 @@ for i = 1: n_states
     log_p_sign_t = log_p_sign_t-diag(diag(log_p_sign_t));
     
     % ----Plot-----
-    [map,num,typ] = brewermap(50,'*RdYlBu');
+    [map,num,typ] = brewermap(50,'*RdBu');
     legends = {'Visual', 'SomMot', 'DorsAttn'};
     netIndex = [1,1,2,3,2,3,2,3];
     figure('Position',[100 100 800 400]);

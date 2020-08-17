@@ -2,7 +2,6 @@
 % =================================================================
 
 % Inputs
-n_componets = 20;
 input_dir = 'F:\The_first_training\results\subject_4d_componets';
 out_dir = 'F:\The_first_training\results\subject_3d_componets';
 
@@ -17,6 +16,9 @@ n_sub = length(file_path);
 for i = 1:n_sub
     fprintf('%d/%d\n',i, n_sub);
     [data, header] = y_Read(file_path{i});
+    if i == 1
+        n_componets = size(data,4);
+    end
     save_name = strsplit(file_names{i}, '.');
     suffix = save_name{end};
     save_name = save_name{1};
