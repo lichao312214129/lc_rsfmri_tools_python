@@ -1,5 +1,4 @@
-% Perform GLM + multiple correction for dynamic functional connectivity.
-% NOTE. Make sure the order of the dependent variables matches the order of the covariances
+% Calculate dfnc variance
 % ==============================================================================================
 
 %% ================================Inputs===========================
@@ -100,7 +99,7 @@ save(fullfile(output_path, 'results_dfnc.mat'), 'h_corrected', 'test_stat', 'pva
 
 %% ==============================Plot=============================
 syms x
-eqn = x*(x-1)/2 == 36;
+eqn = x*(x-1)/2 == n_fnc;
 n_node = solve(eqn,x);
 n_node = double(n_node);
 n_node(n_node<0) = [];
@@ -135,7 +134,7 @@ for i = 1: n_states
     log_p_sign_t = log10(pv)*sign(tvalues);
     log_p_sign_t = log_p_sign_t-diag(diag(log_p_sign_t));
     
-    % ----Plot square net-----
+    % ----Plot-----
     [map,num,typ] = brewermap(50,'*RdBu');
     legends = {'Visual', 'SomMot', 'DorsAttn'};
     netIndex = [1,1,2,3,2,3,2,3];
@@ -170,14 +169,8 @@ for i = 1: n_states
     ylabel(cb,'-log10(p) * sign(t)', 'FontSize', 10);
     title('Patient -  HC');
     
-    % Save
+    %% Save
     saveas(gcf,fullfile(output_path, ['mean_dfnc_in_state', num2str(i), '.pdf']));
-    
-    % ----Plot circos net-----
-    % 根据节点从属的网络划分网络，即像lc_netplot那样整理网络
-    net_index = reshape(net_index,[],1);
-    [re_net_index,index] = sort(net_index);
-    re_net = net(index,index);
 end
 
 
