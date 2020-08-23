@@ -3,21 +3,22 @@
 % ==============================================================================================
 
 %% ================================Inputs===========================
-subjects = 'F:\The_first_training\results\lcSelectedDataFolders.txt';
-data_path = 'F:\The_first_training\results_dfc\lc_dfnc_cluster_stats.mat';
+subjects_name = 'F:\The_first_training\results\lcSelectedDataFolders.txt';
+dfnc_results_path = 'F:\The_first_training\results_dfnc_script';
+prefix = 'lc';
 covariance = 'F:\The_first_training\cov\covariates.xlsx';
-output_path = 'F:\The_first_training\results_dfc';
+output_path = 'F:\The_first_training\results_dfnc_script';
 colnum_id = 1;
 columns_group_label=2;
-columns_covariates = [3,4,5];
-contrast = [-1 1 0 0 0];
+columns_covariates = [3,4];
+contrast = [-1 1 0 0];
 correction_threshold = 0.05;
 correction_method = 'fdr';
 xticklabel = {'State 1', 'State 2','State 3', 'State 4'};
 
 %% ==============================Load=============================
 % subject name
-subjects_file = importdata(subjects);
+subjects_file = importdata(subjects_name);
 n_sub = length(subjects_file);
 subjects_name = cell(n_sub,1);
 for i = 1:n_sub
@@ -25,8 +26,12 @@ for i = 1:n_sub
     subjects_name{i}= sn{end};
 end
 
+% Components
+load(fullfile(dfnc_results_path,[prefix, '_dfnc.mat']));
+comps = dfncInfo.userInput.comp;
+
 % Y
-load(data_path);
+load(fullfile(dfnc_results_path,[prefix, '_dfnc_cluster_stats.mat']));
 dfnc = squeeze(dfnc_corrs);
 [n_sub, n_fnc, n_states] = size(dfnc);
 
@@ -64,23 +69,19 @@ y_name = {'dfnc'};
 GLM.contrast = contrast;
 GLM.test = 'ttest';
 
-% Test
-y = repmat(dfnc,5,1);
-X = repmat(X,5,1);
-id = randperm(size(y,1));
-y = y(id,:,:);
-% X = X(id,:);
-
 % ------Each State Loop--------
 test_stat = zeros(n_states, n_fnc);
 pvalues = ones(n_states, n_fnc);
 h_corrected = zeros(n_states, n_fnc);
 for i  = 1:n_states
-    GLM.y = squeeze(y(:,:,i));
+    GLM.y = squeeze(dfnc(:,:,i));
     GLM.X = X;
     % De-NaN
     GLM.X(isnan(GLM.y(:,1)),:) = [];
     GLM.y(isnan(GLM.y(:,1)),:) = [];
+    
+%     [h,p] = ttest2(GLM.y(GLM.X(:,1)==1,:),GLM.y(GLM.X(:,1)==0,:));
+    
     [test_stat(i,:),pvalues(i,:)]=lc_NBSglm(GLM);
     
     %% Multiple comparison correction
@@ -100,7 +101,7 @@ save(fullfile(output_path, 'results_dfnc.mat'), 'h_corrected', 'test_stat', 'pva
 
 %% ==============================Plot=============================
 syms x
-eqn = x*(x-1)/2 == 36;
+eqn = x*(x-1)/2 == n_fnc;
 n_node = solve(eqn,x);
 n_node = double(n_node);
 n_node(n_node<0) = [];
@@ -108,7 +109,15 @@ n_node(n_node<0) = [];
 mask = tril(ones(n_node,n_node),-1) == 1;
 loc_hc = group_design(:,1)==1;
 loc_p = group_design(:,1)==0;
-opt.colormap = 'gray';
+
+legends = {comps.name};
+net_num_cell = {comps.value};
+n_net = length(net_num_cell);
+net_num = cell2mat({comps.value});
+netIndex = zeros(n_node,1)';
+for i = 1:n_net
+    netIndex(ismember(net_num, net_num_cell{i})) = i;
+end
 
 for i = 1: n_states
     dfnc_hc_state = squeeze(dfnc(loc_hc,:,i));
@@ -121,24 +130,28 @@ for i = 1: n_states
     dfnc_mean_hc_state_square = zeros(n_node,n_node);
     dfnc_mean_hc_state_square(mask) = dfnc_mean_hc_state;
     dfnc_mean_hc_state_square = dfnc_mean_hc_state_square + dfnc_mean_hc_state_square';
-    
+    dfnc_mean_hc_state_square = dfnc_mean_hc_state_square(id_orig2sortednet, id_orig2sortednet);
+
     dfnc_mean_p_state_square = zeros(n_node,n_node);
     dfnc_mean_p_state_square(mask) = dfnc_mean_p_state;
     dfnc_mean_p_state_square = dfnc_mean_p_state_square + dfnc_mean_p_state_square';
-    
+    dfnc_mean_p_state_square = dfnc_mean_p_state_square(id_orig2sortednet, id_orig2sortednet);
+
     tvalues = zeros(n_node,n_node);
     tvalues(mask) = test_stat(i,:);
     tvalues = tvalues + tvalues';
+    tvalues = tvalues(id_orig2sortednet, id_orig2sortednet);
+
     pv = ones(n_node,n_node);
     pv(mask) = pvalues(i,:);
     pv = pv + pv';
+    pv = pv(id_orig2sortednet, id_orig2sortednet);
+
     log_p_sign_t = log10(pv)*sign(tvalues);
     log_p_sign_t = log_p_sign_t-diag(diag(log_p_sign_t));
     
     % ----Plot square net-----
     [map,num,typ] = brewermap(50,'*RdBu');
-    legends = {'Visual', 'SomMot', 'DorsAttn'};
-    netIndex = [1,1,2,3,2,3,2,3];
     figure('Position',[100 100 800 400]);
     
     % HC
@@ -172,13 +185,6 @@ for i = 1: n_states
     
     % Save
     saveas(gcf,fullfile(output_path, ['mean_dfnc_in_state', num2str(i), '.pdf']));
-    
-    % ----Plot circos net-----
-    % 根据节点从属的网络划分网络，即像lc_netplot那样整理网络
-    net_index = reshape(net_index,[],1);
-    [re_net_index,index] = sort(net_index);
-    re_net = net(index,index);
 end
-
 
 

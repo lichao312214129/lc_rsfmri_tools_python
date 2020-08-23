@@ -5,6 +5,11 @@
 input_dir = 'F:\The_first_training\results\subject_4d_componets';
 out_dir = 'F:\The_first_training\results\subject_3d_componets';
 
+% Mkdir
+if ~ exist(out_dir, 'dir')
+    mkdir(out_dir)
+end
+
 % Get all 4d files
 file =  dir(input_dir);
 file_names = {file.name}';
