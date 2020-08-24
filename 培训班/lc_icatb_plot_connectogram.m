@@ -4,6 +4,7 @@ ic = 'F:\The_first_training\results\lc_mean_component_ica_s_all_.nii';
 ic_name = 'F:\The_first_training\results\lc_gica_results\ic_name.xlsx';
 results_file = 'F:\The_first_training\results_dfnc_script\results_dfnc.mat';
 output_path = 'F:\The_first_training\results_dfnc_script';
+only_display_significance = 0;
 
 %% ===========================Load data=============================
 load(results_file);
@@ -43,19 +44,20 @@ n_node = double(n_node);
 n_node(n_node<0) = [];
 
 %% ====================Vector to square mat=========================
-i = 1;
 mask = tril(ones(n_node,n_node),-1) == 1;
-test_stat_mat = zeros(n_node,n_node);
-test_stat_mat(mask) = test_stat(i,:);
-test_stat_mat = test_stat_mat + test_stat_mat';
+if only_display_significance
+    test_stat(h_corrected==0) = 0;
+end
+    
+for i = 1:n_states
+    test_stat_mat = zeros(n_node,n_node);
+    test_stat_mat(mask) = test_stat(i,:);
+    test_stat_mat = test_stat_mat + test_stat_mat';
 
-%% ===========================Plot================================== 
-C = icatb_vec2mat(clusterInfo.Call(1,:));
-lc_icatb_plot_connectogram_base(comp_network_names, 'C', C, 'threshold', 0.7,'comp_labels',comp_labels, 'image_file_names', ic, 'colorbar_label', 'Corr',  'line_width', 1, 'display_type', 'render','slice_plane', 'axial','radius_sm',1.6);
-figure
-imagesc(C);
-colormap(jet)
-caxis([-1,1])
+    %% ===========================Plot================================== 
+    lc_icatb_plot_connectogram_base(comp_network_names, 'C', test_stat_mat, 'threshold', 0.7,'comp_labels',comp_labels, 'image_file_names', ic, 'colorbar_label', 'Corr',  'line_width', 1, 'display_type', 'render','slice_plane', 'axial','radius_sm',1.6);
 
-%% ===========================Save==================================  
-saveas(gcf,fullfile(output_path, 'tvalues_circos.pdf'))
+    %% ===========================Save==================================  
+    set(gcf,'PaperType','a3');
+    saveas(gcf,fullfile(output_path, ['tvalues_circos_state',num2str(i),'.pdf']))
+end

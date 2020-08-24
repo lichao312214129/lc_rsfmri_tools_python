@@ -8,12 +8,12 @@ dfnc_results_path = 'F:\The_first_training\results_dfnc_script';
 prefix = 'lc';
 covariance = 'F:\The_first_training\cov\covariates.xlsx';
 output_path = 'F:\The_first_training\results_dfnc_script';
-colnum_id = 1;
-columns_group_label=2;
-columns_covariates = [3,4];
+colnum_id = 1;   % which colnum is the subject ID
+columns_group_label=2;  % which colnum is the group label
+columns_covariates = [2,3];  % which colnums are the covariates
 contrast = [-1 1 0 0];
-correction_threshold = 0.05;
 correction_method = 'fdr';
+correction_threshold = 0.05;
 xticklabel = {'State 1', 'State 2','State 3', 'State 4'};
 
 %% ==============================Load=============================
@@ -100,12 +100,11 @@ end
 save(fullfile(output_path, 'results_dfnc.mat'), 'h_corrected', 'test_stat', 'pvalues');
 
 %% ==============================Plot=============================
-syms x
-eqn = x*(x-1)/2 == n_fnc;
-n_node = solve(eqn,x);
-n_node = double(n_node);
-n_node(n_node<0) = [];
+% How many nodes
+n_node = [(1 + power(1-8*1*(-n_fnc), 0.5))/2, (1 - power(1-8*1*(-n_fnc), 0.5))/2];
+n_node = n_node(sign(n_node)==1);
 
+% vector to square mat
 mask = tril(ones(n_node,n_node),-1) == 1;
 loc_hc = group_design(:,1)==1;
 loc_p = group_design(:,1)==0;
@@ -130,25 +129,14 @@ for i = 1: n_states
     dfnc_mean_hc_state_square = zeros(n_node,n_node);
     dfnc_mean_hc_state_square(mask) = dfnc_mean_hc_state;
     dfnc_mean_hc_state_square = dfnc_mean_hc_state_square + dfnc_mean_hc_state_square';
-    dfnc_mean_hc_state_square = dfnc_mean_hc_state_square(id_orig2sortednet, id_orig2sortednet);
 
     dfnc_mean_p_state_square = zeros(n_node,n_node);
     dfnc_mean_p_state_square(mask) = dfnc_mean_p_state;
     dfnc_mean_p_state_square = dfnc_mean_p_state_square + dfnc_mean_p_state_square';
-    dfnc_mean_p_state_square = dfnc_mean_p_state_square(id_orig2sortednet, id_orig2sortednet);
 
     tvalues = zeros(n_node,n_node);
     tvalues(mask) = test_stat(i,:);
     tvalues = tvalues + tvalues';
-    tvalues = tvalues(id_orig2sortednet, id_orig2sortednet);
-
-    pv = ones(n_node,n_node);
-    pv(mask) = pvalues(i,:);
-    pv = pv + pv';
-    pv = pv(id_orig2sortednet, id_orig2sortednet);
-
-    log_p_sign_t = log10(pv)*sign(tvalues);
-    log_p_sign_t = log_p_sign_t-diag(diag(log_p_sign_t));
     
     % ----Plot square net-----
     [map,num,typ] = brewermap(50,'*RdBu');
@@ -175,12 +163,12 @@ for i = 1: n_states
     
     % Patient - HC
     subplot(1,3,3)
-    lc_netplot('-n', log_p_sign_t, '-ni',  netIndex,'-il',1, '-lg', legends);
+    lc_netplot('-n', tvalues, '-ni',  netIndex,'-il',1, '-lg', legends);
     axis square
     colormap(map);
     cb = colorbar('horiz','position',[0.73 0.1 0.15 0.02]);
     % caxis([-max(max(abs(log_p_sign_t))),max(max(abs(log_p_sign_t)))]);
-    ylabel(cb,'-log10(p) * sign(t)', 'FontSize', 10);
+    ylabel(cb,'T-values', 'FontSize', 10);
     title('Patient -  HC');
     
     % Save

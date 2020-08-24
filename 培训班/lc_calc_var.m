@@ -5,11 +5,11 @@ subjects_name = 'F:\The_first_training\results\lcSelectedDataFolders.txt';
 dfnc_results_path = 'F:\The_first_training\results_dfnc_script';
 prefix = 'lc';
 covariance = 'F:\The_first_training\cov\covariates.xlsx';
-output_path = 'F:\The_first_training\results_dfc';
+output_path = 'F:\The_first_training\results_dfnc_script';
 colnum_id = 1;
 columns_group_label = 2;
-columns_covariates = [3,4,5];
-contrast = [-1 1 0 0 0];
+columns_covariates = [2,3];
+contrast = [-1 1 0 0];
 correction_threshold = 0.05;
 correction_method = 'fdr';
 xticklabel = {'State 1', 'State 2','State 3', 'State 4'};
@@ -91,16 +91,21 @@ h_corrected = results.corrected_h;
 save(fullfile(output_path, 'results_var_dfnc.mat'), 'h_corrected', 'test_stat', 'pvalues');
 
 %% ==============================Pre plot=============================
+% Number of nodes
+n_node = [(1 + power(1-8*1*(-n_fnc), 0.5))/2, (1 - power(1-8*1*(-n_fnc), 0.5))/2];
+n_node = n_node(sign(n_node)==1);
+
 % Components name
 load(fullfile(dfnc_results_path,[prefix, '_dfnc.mat']))
 comps = dfncInfo.userInput.comp;
-
-% Number of nodes
-syms x
-eqn = x*(x-1)/2 == n_fnc;
-n_node = solve(eqn,x);
-n_node = double(n_node);
-n_node(n_node<0) = [];
+legends = {comps.name};
+net_num_cell = {comps.value};
+n_net = length(net_num_cell);
+net_num = cell2mat({comps.value});
+netIndex = zeros(n_node,1)';
+for i = 1:n_net
+    netIndex(ismember(net_num, net_num_cell{i})) = i;
+end
 
 % vector to squre net
 mask = tril(ones(n_node,n_node),-1) == 1;
@@ -128,8 +133,6 @@ log_p_sign_t = log_p_sign_t-diag(diag(log_p_sign_t));
 max_caix = max([max(var_dfnc_mean_p_square(:)), max(var_dfnc_mean_hc_square(:))]);
 map_var = brewermap(50,'Reds');
 map_pt = brewermap(50,'*RdBu');
-legends = {'Visual', 'SomMot', 'DorsAttn'};
-netIndex = [1,1,2,3,2,3,2,3];
 figure('Position',[100 100 800 400]);
 
 % HC
@@ -149,7 +152,7 @@ h = gca;
 colormap(h, map_var);
 cb = colorbar('horiz','position',[0.3 0.1 0.15 0.02]);
 caxis([0,max_caix]);
-ylabel(cb,'Variance of DFNC', 'FontSize', 10);
+ylabel(cb,'Variance of dFNC', 'FontSize', 10);
 title('Patient');
 
 % Patient - HC
@@ -165,9 +168,8 @@ caxis([min_caix_pt, max_caix_pt]);
 ylabel(cb,'-log10(p) * sign(t)', 'FontSize', 10);
 title('Patient -  HC');
 
-
 %% ================================Save=============================
-saveas(gcf,fullfile(output_path, ['mean_dfnc_in_state', num2str(i), '.pdf']));
+saveas(gcf,fullfile(output_path, 'var_dfnc.pdf'));
 
 
 
