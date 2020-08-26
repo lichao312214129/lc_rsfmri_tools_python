@@ -1,40 +1,43 @@
 %% ===========================Inputs================================
-dfnc_param = 'F:\The_first_training\results_dfnc_script\lc_dfnc.mat';
-ic = 'F:\The_first_training\results\lc_mean_component_ica_s_all_.nii';
+dfnc_workdir = 'F:\The_first_training\results_dfnc_script';
+prefix = 'lc';
+
 ic_name = 'F:\The_first_training\results\lc_gica_results\ic_name.xlsx';
-results_file = 'F:\The_first_training\results_dfnc_script\results_dfnc.mat';
-output_path = 'F:\The_first_training\results_dfnc_script';
 only_display_significance = 0;
 
 %% ===========================Load data=============================
-load(results_file);
+% Statistical results
+load(fullfile(dfnc_workdir,'results_dfnc.mat'));
 [n_states, n_fnc] = size(test_stat);
 
-load(dfnc_param);
+% ICs
+load(fullfile(dfnc_workdir,[prefix,'_dfnc.mat']));
+ica_path = fileparts(dfncInfo.userInput.ica_param_file);
+ic = fullfile(ica_path,[prefix, '_mean_component_ica_s_all_.nii']);
+
+% Components
+load(fullfile(dfnc_workdir, [prefix, '_dfnc.mat']));
+comps = dfncInfo.userInput.comp;
 comps_num = dfncInfo.comps;
 
-[~, ~, ic_name_raw] = xlsread(ic_name);
-
 %% ==================Get net_idx and network name===================
-selected_comps = ic_name_raw(comps_num);
+selected_comps = {comps.name}';
+selected_comp_labels = {comps.value}';
 n_selected_comps = length(selected_comps);
 uni_selected_comps = unique(selected_comps);
 n_uni_selected_comps = length(uni_selected_comps);
-net_idx = zeros(n_selected_comps,1);
+net_idx = cell(n_selected_comps,1);
 for i = 1:n_uni_selected_comps
-    net_idx(ismember(selected_comps, uni_selected_comps(i))) = i;
+    net_idx{i} = ones(length(selected_comp_labels{i}),1)+i-1;
 end
+net_idx = cell2mat(net_idx);
 
-comp_network_names = cell(n_uni_selected_comps,2);
-comp_network_names(:,1) = uni_selected_comps;
-for i = 1:n_uni_selected_comps
-    comp_network_names{i,2} =  reshape(comps_num(ismember(selected_comps, uni_selected_comps(i))),1,[]);
-end
+% comp_labels = mat2cell(comps_num,[16,1]);
+% for i = 1:n_selected_comps
+%     comp_labels = cat(1,comp_labels, repmat(selected_comps(i), [length(selected_comp_labels{i}),1]));
+% end
 
-comp_labels = cell(n_selected_comps,1);
-for i = 1:n_selected_comps
-    comp_labels{i} =num2str(comps_num(i));
-end
+comp_network_names = cat(2,selected_comps,selected_comp_labels);
 
 %% ======================Calc how many nodes========================
 syms x
@@ -55,9 +58,9 @@ for i = 1:n_states
     test_stat_mat = test_stat_mat + test_stat_mat';
 
     %% ===========================Plot================================== 
-    lc_icatb_plot_connectogram_base(comp_network_names, 'C', test_stat_mat, 'threshold', 0.7,'comp_labels',comp_labels, 'image_file_names', ic, 'colorbar_label', 'Corr',  'line_width', 1, 'display_type', 'render','slice_plane', 'axial','radius_sm',1.6);
+    lc_icatb_plot_connectogram_base(comp_network_names, 'C', test_stat_mat, 'threshold', 0.7, 'image_file_names', ic, 'colorbar_label', 'Corr',  'line_width', 1, 'display_type', 'render','slice_plane', 'axial','radius_sm',1.6);
 
     %% ===========================Save==================================  
     set(gcf,'PaperType','a3');
-    saveas(gcf,fullfile(output_path, ['tvalues_circos_state',num2str(i),'.pdf']))
+    saveas(gcf,fullfile(dfnc_workdir, ['tvalues_circos_state',num2str(i),'.pdf']))
 end

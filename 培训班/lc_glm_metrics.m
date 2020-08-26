@@ -14,7 +14,7 @@ columns_covariates = [3,4,5];
 contrast = [-1 1 0 0 0];
 correction_threshold = 0.05;
 correction_method = 'fdr';
-xticklabel = {'State 1', 'State 2','State 3', 'State 4'};
+
 %% ==============================Load=============================
 % subject name
 subjects_file = importdata(subjects);

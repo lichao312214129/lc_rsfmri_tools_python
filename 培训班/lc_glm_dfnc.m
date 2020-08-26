@@ -3,22 +3,23 @@
 % ==============================================================================================
 
 %% ================================Inputs===========================
-subjects_name = 'F:\The_first_training\results\lcSelectedDataFolders.txt';
-dfnc_results_path = 'F:\The_first_training\results_dfnc_script';
+dfnc_workdir = 'F:\The_first_training\results_dfnc_script';
 prefix = 'lc';
+
 covariance = 'F:\The_first_training\cov\covariates.xlsx';
-output_path = 'F:\The_first_training\results_dfnc_script';
 colnum_id = 1;   % which colnum is the subject ID
 columns_group_label=2;  % which colnum is the group label
-columns_covariates = [2,3];  % which colnums are the covariates
+columns_covariates = [3,4];  % which colnums are the covariates
 contrast = [-1 1 0 0];
 correction_method = 'fdr';
 correction_threshold = 0.05;
-xticklabel = {'State 1', 'State 2','State 3', 'State 4'};
+only_display_sig = 0;
 
 %% ==============================Load=============================
 % subject name
-subjects_file = importdata(subjects_name);
+load(fullfile(dfnc_workdir,[prefix,'_dfnc.mat']));
+ica_path = fileparts(dfncInfo.userInput.ica_param_file);
+subjects_file = importdata(fullfile(ica_path,[prefix, 'SelectedDataFolders.txt']));
 n_sub = length(subjects_file);
 subjects_name = cell(n_sub,1);
 for i = 1:n_sub
@@ -27,28 +28,30 @@ for i = 1:n_sub
 end
 
 % Components
-load(fullfile(dfnc_results_path,[prefix, '_dfnc.mat']));
+load(fullfile(dfnc_workdir,[prefix, '_dfnc.mat']));
 comps = dfncInfo.userInput.comp;
 
 % Y
-load(fullfile(dfnc_results_path,[prefix, '_dfnc_cluster_stats.mat']));
+load(fullfile(dfnc_workdir,[prefix, '_dfnc_cluster_stats.mat']));
 dfnc = squeeze(dfnc_corrs);
 [n_sub, n_fnc, n_states] = size(dfnc);
 
 % X
-[cov, header, raw] = xlsread(covariance);
+[~, header, cov] = xlsread(covariance);
+cov = cov(2:end,:);
 
 % design matrix
 group_label = cov(:,columns_group_label);
+group_label = cell2mat(group_label);
 uni_group_label = unique(group_label);
 group_design = zeros(size(cov,1),numel(uni_group_label));
 for i =  1:numel(uni_group_label)
     group_design(:,i) = ismember(group_label, uni_group_label(i));
 end
-design_matrix = cat(2, group_design, cov(:,columns_covariates));
+design_matrix = cat(2, group_design, cell2mat(cov(:,columns_covariates)));
 
 % Sort design_matrix according with subject_name
-id_in_cov = raw(2:end,colnum_id);
+id_in_cov = cov(:,colnum_id);
 for i = 1:n_sub
     if  ~isa(id_in_cov{i}, 'char')
         id_in_cov{i} = num2str(id_in_cov{i});
@@ -58,8 +61,8 @@ end
 design_matrix_sorted = design_matrix(Locb,:);
 
 % Make directory to save results
-if ~exist(output_path,'dir')
-    mkdir(output_path);
+if ~exist(dfnc_workdir,'dir')
+    mkdir(dfnc_workdir);
 end
 
 %% ===============================Stat==============================
@@ -97,9 +100,12 @@ end
 % ------Each State Loop End--------
 
 %% ==============================Save=============================
-save(fullfile(output_path, 'results_dfnc.mat'), 'h_corrected', 'test_stat', 'pvalues');
+save(fullfile(dfnc_workdir, 'results_dfnc.mat'), 'h_corrected', 'test_stat', 'pvalues');
 
 %% ==============================Plot=============================
+if only_display_sig
+    test_stat(~h_corrected) = 0;
+end
 % How many nodes
 n_node = [(1 + power(1-8*1*(-n_fnc), 0.5))/2, (1 - power(1-8*1*(-n_fnc), 0.5))/2];
 n_node = n_node(sign(n_node)==1);
@@ -143,8 +149,9 @@ for i = 1: n_states
     figure('Position',[100 100 800 400]);
     
     % HC
+    whitebg([0 0 0])
     subplot(1,3,1)
-    lc_netplot('-n', dfnc_mean_hc_state_square, '-ni',  netIndex,'-il',1, '-lg', legends);
+    lc_netplot('-n', dfnc_mean_hc_state_square, '-ni',  netIndex,'-il',1, '-lg', legends,'-lgf',8);
     axis square
     colormap(map);
     caxis([-1,1]);
@@ -152,27 +159,29 @@ for i = 1: n_states
     
     % Patient
     subplot(1,3,2)
-    lc_netplot('-n', dfnc_mean_p_state_square, '-ni',  netIndex,'-il',1, '-lg', legends);
+    lc_netplot('-n', dfnc_mean_p_state_square, '-ni',  netIndex,'-il',1, '-lg', legends,'-lgf',8);
     axis square
     colormap(map);
     cb = colorbar('horiz','position',[0.3 0.1 0.15 0.02]);
     caxis([-1,1]);
-    ylabel(cb,'Functional connectivity (Z)', 'FontSize', 10);
+    ylabel(cb,'Correlations (Z)', 'FontSize', 10);
     title('Patient');
      
     
     % Patient - HC
     subplot(1,3,3)
-    lc_netplot('-n', tvalues, '-ni',  netIndex,'-il',1, '-lg', legends);
+    lc_netplot('-n', tvalues, '-ni',  netIndex,'-il',1, '-lg', legends,'-lgf',8);
     axis square
     colormap(map);
     cb = colorbar('horiz','position',[0.73 0.1 0.15 0.02]);
-    % caxis([-max(max(abs(log_p_sign_t))),max(max(abs(log_p_sign_t)))]);
+    caxis([-max(max(abs(tvalues))),max(max(abs(tvalues)))]);
     ylabel(cb,'T-values', 'FontSize', 10);
     title('Patient -  HC');
     
     % Save
-    saveas(gcf,fullfile(output_path, ['mean_dfnc_in_state', num2str(i), '.pdf']));
+%     set(gcf,'Color','white');
+%     set(gcf, 'InvertHardCopy', 'off'); 
+    saveas(gcf,fullfile(dfnc_workdir, ['Statistical_results_dfnc_in_state', num2str(i), '.pdf']));
 end
 
 

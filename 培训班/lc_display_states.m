@@ -46,7 +46,7 @@ end
 figure('Position',[100 100 1200 400]);
 for i = 1:n_state
     subplot(1,n_state,i)
-    lc_netplot('-n', state_square{i}, '-ni',  netIndex,'-il',1, '-lg', legends);
+    lc_netplot('-n', state_square{i}, '-ni',  netIndex,'-il',1, '-lg', legends, legends,'-lgf',8);
     axis square
     colormap(map);
     caxis([-1,1]);

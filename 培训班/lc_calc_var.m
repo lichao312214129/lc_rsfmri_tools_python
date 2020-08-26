@@ -1,22 +1,26 @@
 %% Calculate dfnc variance
 
 %% ================================Inputs===========================
-subjects_name = 'F:\The_first_training\results\lcSelectedDataFolders.txt';
-dfnc_results_path = 'F:\The_first_training\results_dfnc_script';
+dfnc_workdir = 'F:\The_first_training\results_dfnc_script';
 prefix = 'lc';
+
 covariance = 'F:\The_first_training\cov\covariates.xlsx';
 output_path = 'F:\The_first_training\results_dfnc_script';
 colnum_id = 1;
 columns_group_label = 2;
-columns_covariates = [2,3];
+columns_covariates = [3,4];
 contrast = [-1 1 0 0];
 correction_threshold = 0.05;
 correction_method = 'fdr';
-xticklabel = {'State 1', 'State 2','State 3', 'State 4'};
+only_display_sig = 0;
 
 %% ==============================Load=============================
 % subject name
-subjects_file = importdata(subjects_name);
+% subject name
+load(fullfile(dfnc_workdir,[prefix,'_dfnc.mat']));
+ica_path = fileparts(dfncInfo.userInput.ica_param_file);
+subjects_file = importdata(fullfile(ica_path,[prefix, 'SelectedDataFolders.txt']));
+
 n_subj = length(subjects_file);
 subjects_name = cell(n_subj,1);
 for i = 1:n_subj
@@ -25,9 +29,9 @@ for i = 1:n_subj
 end
 
 % Y
-dfnc_struct = dir(fullfile(dfnc_results_path,[prefix,'_dfnc_sub','*','results.mat']));
+dfnc_struct = dir(fullfile(dfnc_workdir,[prefix,'_dfnc_sub','*','results.mat']));
 dfnc_name = {dfnc_struct.name}';
-dfnc_path = fullfile(dfnc_results_path, dfnc_name);
+dfnc_path = fullfile(dfnc_workdir, dfnc_name);
 n_subj = length(dfnc_name);
 for i = 1:n_subj
     fncdyn = importdata(dfnc_path{i});
@@ -41,19 +45,21 @@ end
 [~, n_fnc] = size(var_dfnc);
 
 % X
-[cov, header, raw] = xlsread(covariance);
+[~, header, cov] = xlsread(covariance);
+cov = cov(2:end,:);
 
 % design matrix
 group_label = cov(:,columns_group_label);
+group_label = cell2mat(group_label);
 uni_group_label = unique(group_label);
 group_design = zeros(size(cov,1),numel(uni_group_label));
 for i =  1:numel(uni_group_label)
     group_design(:,i) = ismember(group_label, uni_group_label(i));
 end
-design_matrix = cat(2, group_design, cov(:,columns_covariates));
+design_matrix = cat(2, group_design, cell2mat(cov(:,columns_covariates)));
 
 % Sort design_matrix according with subject_name
-id_in_cov = raw(2:end,colnum_id);
+id_in_cov = cov(:,colnum_id);
 for i = 1:n_subj
     if  ~isa(id_in_cov{i}, 'char')
         id_in_cov{i} = num2str(id_in_cov{i});
@@ -91,12 +97,16 @@ h_corrected = results.corrected_h;
 save(fullfile(output_path, 'results_var_dfnc.mat'), 'h_corrected', 'test_stat', 'pvalues');
 
 %% ==============================Pre plot=============================
+if only_display_sig
+    test_stat(~h_corrected) = 0;
+end
+
 % Number of nodes
 n_node = [(1 + power(1-8*1*(-n_fnc), 0.5))/2, (1 - power(1-8*1*(-n_fnc), 0.5))/2];
 n_node = n_node(sign(n_node)==1);
 
 % Components name
-load(fullfile(dfnc_results_path,[prefix, '_dfnc.mat']))
+load(fullfile(dfnc_workdir,[prefix, '_dfnc.mat']))
 comps = dfncInfo.userInput.comp;
 legends = {comps.name};
 net_num_cell = {comps.value};
@@ -126,8 +136,6 @@ tvalues = tvalues + tvalues';
 pv = ones(n_node,n_node);
 pv(mask) = pvalues;
 pv = pv + pv';
-log_p_sign_t = log10(pv)*sign(tvalues);
-log_p_sign_t = log_p_sign_t-diag(diag(log_p_sign_t));
 
 %% ==============================Plot=============================
 max_caix = max([max(var_dfnc_mean_p_square(:)), max(var_dfnc_mean_hc_square(:))]);
@@ -137,7 +145,7 @@ figure('Position',[100 100 800 400]);
 
 % HC
 subplot(1,3,1)
-lc_netplot('-n', var_dfnc_mean_hc_square, '-ni',  netIndex,'-il',1, '-lg', legends);
+lc_netplot('-n', var_dfnc_mean_hc_square, '-ni',  netIndex,'-il',1, '-lg', legends,'-lgf',8);
 axis square
 h = gca;
 colormap(h, map_var);
@@ -146,7 +154,7 @@ title('HC');
 
 % Patient
 subplot(1,3,2)
-lc_netplot('-n', var_dfnc_mean_p_square, '-ni',  netIndex,'-il',1, '-lg', legends);
+lc_netplot('-n', var_dfnc_mean_p_square, '-ni',  netIndex,'-il',1, '-lg', legends,'-lgf',8);
 axis square
 h = gca;
 colormap(h, map_var);
@@ -156,16 +164,16 @@ ylabel(cb,'Variance of dFNC', 'FontSize', 10);
 title('Patient');
 
 % Patient - HC
-min_caix_pt = min(log_p_sign_t(:));
-max_caix_pt = max(log_p_sign_t(:));
+min_caix_pt = min(tvalues(:));
+max_caix_pt = max(tvalues(:));
 
 subplot(1,3,3)
-lc_netplot('-n', log_p_sign_t, '-ni',  netIndex,'-il',1, '-lg', legends);
+lc_netplot('-n', tvalues, '-ni',  netIndex,'-il',1, '-lg', legends,'-lgf',8);
 axis square
 colormap(map_pt);
 cb = colorbar('horiz','position',[0.73 0.1 0.15 0.02]);
 caxis([min_caix_pt, max_caix_pt]);
-ylabel(cb,'-log10(p) * sign(t)', 'FontSize', 10);
+ylabel(cb,'T-values', 'FontSize', 10);
 title('Patient -  HC');
 
 %% ================================Save=============================

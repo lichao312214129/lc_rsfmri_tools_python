@@ -1,9 +1,10 @@
 % This script is used to split group 4d components into multiple group 3d components.
 % =================================================================
 
-% Inputs
+% =================================Inputs==================================
 input_file = 'F:\The_first_training\results\lc_mean_component_ica_s_all_.nii';
 out_dir = 'F:\The_first_training\results\group_3d_componets';
+% =================================Inputs==================================
 
 % Mkdir
 if ~ exist(out_dir, 'dir')

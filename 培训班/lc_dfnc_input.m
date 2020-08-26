@@ -1,7 +1,10 @@
 %% Use full path for directories and files wherever needed. After entering parameters, use command icatb_dfnc_batch(input_file);
 
-%% Output directory to place results 
+%% Output directory to place results
 outputDir = 'F:\The_first_training\results_dfnc_script';
+
+%% *_dfnc.mat
+dfnc_param = 'F:\The_first_training\results_dfnc_script\lc_dfnc.mat';
 
 %% ICA parameter file 
 ica_param_file = 'F:\The_first_training\results\lc_ica_parameter_info.mat';
@@ -9,19 +12,21 @@ ica_param_file = 'F:\The_first_training\results\lc_ica_parameter_info.mat';
 
 %% Cell array of dimensions number of network names by 2. Don't duplicate components in different
 % network names
-comp_network_names = {'DMN', [3,7,10];                 
-                      'AUD', 13;
-                      'VIS',[18,19];
-                      'LFPN',4;
-                      'RFPN',6;
-                      'DorsAttn',9;
-                      'SMN',11;
-                      'CEN',20
+comp_network_names = {'DMN', [52,70];                 
+                      'AUD', [25,32,46,71];
+                      'VIS',[10,13,67];
+                      'LFPN',84;
+                      'RFPN',68;
+                      'CEN',48;
+                      'SN',[58,91];
+                      'DorsAttn',83;
+                      'SMN',42;
                       };
 
+% 58：扣带回
 
 %% TR of the experiment
-TR = 2;
+TR = 2.5;
 
 
 %% dFNC params
@@ -58,11 +63,9 @@ dfnc_params.wsize = 30;  % **重要的参数之一，滑动窗的大小**
 dfnc_params.window_alpha = 3;
 dfnc_params.num_repetitions = 10;
 
-
-
 %% Post-processing (K-means on dfnc corrleations, meta state analysis)
 % Number of clusters extracted from windowed dfnc correlations using standard dfnc approach
-postprocess.num_clusters = 8;
+postprocess.num_clusters = 4;
 
 
 % Meta state analysis
@@ -87,7 +90,12 @@ postprocess.dmethod = 'city';
 
 
 %% Save HTML report in directory html with suffix *dfnc*results*html
-postprocess.display_results = 1;
+postprocess.display_results = 0;
 
+%% Save it into *_dfnc.mat
+load(dfnc_param)
+dfncInfo.postprocess = postprocess;
+[path, file, suffix] = fileparts(dfnc_param);
+save(dfnc_param, 'dfncInfo');
 
 
