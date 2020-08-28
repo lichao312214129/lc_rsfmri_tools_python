@@ -83,7 +83,19 @@ for i  = 1:n_states
     GLM.X(isnan(GLM.y(:,1)),:) = [];
     GLM.y(isnan(GLM.y(:,1)),:) = [];
     
-%     [h,p] = ttest2(GLM.y(GLM.X(:,1)==1,:),GLM.y(GLM.X(:,1)==0,:));
+    % GLM
+    STATS.thresh = 3;
+    STATS.alpha = 0.0025; % Equal to two-tailed 0.05.
+    STATS.N = n_node;
+    STATS.size = 'extent';
+    GLM.perms = 1000;
+    GLM.X = design_medicated;
+    GLM.y = fc_medicated;
+    GLM.contrast = contrast_medicated;
+    GLM.test = test_type; 
+    [test_stat_medicated, pvalues_medicated]=NBSglm(GLM);
+    STATS.test_stat = abs(test_stat_medicated);  % two-tailed
+    [n_cnt_medicated, cont_medicated, pval] = NBSstats(STATS);
     
     [test_stat(i,:),pvalues(i,:)]=lc_NBSglm(GLM);
     
@@ -103,9 +115,11 @@ end
 save(fullfile(dfnc_workdir, 'results_dfnc.mat'), 'h_corrected', 'test_stat', 'pvalues');
 
 %% ==============================Plot=============================
+% Is only display significances?
 if only_display_sig
     test_stat(~h_corrected) = 0;
 end
+
 % How many nodes
 n_node = [(1 + power(1-8*1*(-n_fnc), 0.5))/2, (1 - power(1-8*1*(-n_fnc), 0.5))/2];
 n_node = n_node(sign(n_node)==1);
