@@ -1,17 +1,17 @@
 %% Calculate dfnc variance
 
 %% ================================Inputs===========================
-dfnc_workdir = 'F:\The_first_training\results_dfnc_script';
-prefix = 'lc';
+dfnc_workdir = 'F:\The_first_training\dfnc';
+prefix = 'le';
 
 covariance = 'F:\The_first_training\cov\covariates.xlsx';
-output_path = 'F:\The_first_training\results_dfnc_script';
+output_path = 'F:\The_first_training\dfnc';
 colnum_id = 1;
 columns_group_label = 2;
 columns_covariates = [3,4];
 contrast = [-1 1 0 0];
-correction_threshold = 0.05;
 correction_method = 'fdr';
+correction_threshold = 0.05;
 only_display_sig = 0;
 
 %% ==============================Load=============================

@@ -2,9 +2,9 @@
 % ==============================================================================================
 
 %% ================================Inputs===========================
-dfnc_results_path = 'F:\The_first_training\results_dfnc_script';
-prefix = 'lc';
-output_path = 'F:\The_first_training\results_dfnc_script';
+dfnc_results_path = 'F:\The_first_training\dfnc';
+prefix = 'le';
+output_path = 'F:\The_first_training\dfnc';
 
 %% ==============================Load=============================
 load(fullfile(dfnc_results_path,[prefix, '_dfnc_post_process']));

@@ -1,8 +1,6 @@
 %% ===========================Inputs================================
-dfnc_workdir = 'F:\The_first_training\results_dfnc_script';
-prefix = 'lc';
-
-ic_name = 'F:\The_first_training\results\lc_gica_results\ic_name.xlsx';
+dfnc_workdir = 'F:\The_first_training\dfnc';
+prefix = 'le';
 only_display_significance = 0;
 
 %% ===========================Load data=============================
@@ -58,7 +56,7 @@ for i = 1:n_states
     test_stat_mat = test_stat_mat + test_stat_mat';
 
     %% ===========================Plot================================== 
-    lc_icatb_plot_connectogram_base(comp_network_names, 'C', test_stat_mat, 'threshold', 0.7, 'image_file_names', ic, 'colorbar_label', 'Corr',  'line_width', 1, 'display_type', 'render','slice_plane', 'axial','radius_sm',1.6);
+    lc_icatb_plot_connectogram_base(comp_network_names, 'C', test_stat_mat, 'threshold', 0.7, 'image_file_names', ic, 'colorbar_label', 'Corr',  'line_width', 1, 'display_type', 'render','slice_plane', 'axial','radius_sm',1.8, 'conn_threshold',-Inf);
 
     %% ===========================Save==================================  
     set(gcf,'PaperType','a3');

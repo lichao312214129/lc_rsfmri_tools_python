@@ -3,8 +3,8 @@
 % ==============================================================================================
 
 %% ================================Inputs===========================
-dfnc_workdir = 'F:\The_first_training\results_dfnc_script';
-prefix = 'lc';
+dfnc_workdir = 'F:\The_first_training\dfnc';
+prefix = 'le';
 
 covariance = 'F:\The_first_training\cov\covariates.xlsx';
 colnum_id = 1;   % which colnum is the subject ID
@@ -37,21 +37,36 @@ dfnc = squeeze(dfnc_corrs);
 [n_sub, n_fnc, n_states] = size(dfnc);
 
 % X
-[~, header, cov] = xlsread(covariance);
-cov = cov(2:end,:);
+[~, ~, suffix] = fileparts(covariance);
+if strcmp(suffix,  '.txt')
+    cov = importdata(covariance);
+    data = cov.data;
+    textdata = cov.textdata;
+    cov_ = cell(size(textdata));
+    [nr,nl] = size(cov_);
+    for i = 2:nr
+        for j = 2:nl
+            cov_{i,j} = data(i-1,j-1);
+        end
+    end
+    
+elseif suffix == '.xlsx'
+    [~, header, cov1] = xlsread(covariance);
+end
+cov1 = cov1(2:end,:);
 
 % design matrix
-group_label = cov(:,columns_group_label);
+group_label = cov1(:,columns_group_label);
 group_label = cell2mat(group_label);
 uni_group_label = unique(group_label);
-group_design = zeros(size(cov,1),numel(uni_group_label));
+group_design = zeros(size(cov1,1),numel(uni_group_label));
 for i =  1:numel(uni_group_label)
     group_design(:,i) = ismember(group_label, uni_group_label(i));
 end
-design_matrix = cat(2, group_design, cell2mat(cov(:,columns_covariates)));
+design_matrix = cat(2, group_design, cell2mat(cov1(:,columns_covariates)));
 
 % Sort design_matrix according with subject_name
-id_in_cov = cov(:,colnum_id);
+id_in_cov = cov1(:,colnum_id);
 for i = 1:n_sub
     if  ~isa(id_in_cov{i}, 'char')
         id_in_cov{i} = num2str(id_in_cov{i});
@@ -84,18 +99,18 @@ for i  = 1:n_states
     GLM.y(isnan(GLM.y(:,1)),:) = [];
     
     % GLM
-    STATS.thresh = 3;
-    STATS.alpha = 0.0025; % Equal to two-tailed 0.05.
-    STATS.N = n_node;
+%     STATS.thresh = 3;
+%     STATS.alpha = 0.0025; % Equal to two-tailed 0.05.
+%     STATS.N = n_node;
     STATS.size = 'extent';
-    GLM.perms = 1000;
-    GLM.X = design_medicated;
-    GLM.y = fc_medicated;
-    GLM.contrast = contrast_medicated;
-    GLM.test = test_type; 
-    [test_stat_medicated, pvalues_medicated]=NBSglm(GLM);
-    STATS.test_stat = abs(test_stat_medicated);  % two-tailed
-    [n_cnt_medicated, cont_medicated, pval] = NBSstats(STATS);
+%     GLM.perms = 1000;
+%     GLM.X = design_medicated;
+%     GLM.y = fc_medicated;
+%     GLM.contrast = contrast_medicated;
+%     GLM.test = test_type; 
+%     [test_stat_medicated, pvalues_medicated]=NBSglm(GLM);
+%     STATS.test_stat = abs(test_stat_medicated);  % two-tailed
+%     [n_cnt_medicated, cont_medicated, pval] = NBSstats(STATS);
     
     [test_stat(i,:),pvalues(i,:)]=lc_NBSglm(GLM);
     
@@ -193,8 +208,6 @@ for i = 1: n_states
     title('Patient -  HC');
     
     % Save
-%     set(gcf,'Color','white');
-%     set(gcf, 'InvertHardCopy', 'off'); 
     saveas(gcf,fullfile(dfnc_workdir, ['Statistical_results_dfnc_in_state', num2str(i), '.pdf']));
 end
 

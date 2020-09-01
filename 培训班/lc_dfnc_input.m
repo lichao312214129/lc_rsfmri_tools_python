@@ -1,30 +1,28 @@
 %% Use full path for directories and files wherever needed. After entering parameters, use command icatb_dfnc_batch(input_file);
 
 %% Output directory to place results
-outputDir = 'F:\The_first_training\results_dfnc_script';
-
-%% *_dfnc.mat
-dfnc_param = 'F:\The_first_training\results_dfnc_script\lc_dfnc.mat';
+outputDir = 'F:\The_first_training\dfnc';
 
 %% ICA parameter file 
-ica_param_file = 'F:\The_first_training\results\lc_ica_parameter_info.mat';
+ica_param_file = 'F:\The_first_training\results\le_ica_parameter_info.mat';
 
 
 %% Cell array of dimensions number of network names by 2. Don't duplicate components in different
 % network names
-comp_network_names = {'DMN', [52,70];                 
-                      'AUD', [25,32,46,71];
-                      'VIS',[10,13,67];
-                      'LFPN',84;
-                      'RFPN',68;
-                      'CEN',48;
-                      'SN',[58,91];
-                      'DorsAttn',83;
-                      'SMN',42;
+comp_network_names = {'DMN', [8];                 
+                      % 'AUD', [];
+                      'VIS',[10];
+                      'LFPN',15;
+                      'RFPN',11;
+                      % 'CEN',[];
+                      % 'SN',[];
+                      % 'DorsAttn',;
+                      % 'SMN',[];
+                      % 'CER',;
                       };
 
-% 58：扣带回
-
+% 27,34:SMN?
+% 68: SN?
 %% TR of the experiment
 TR = 2.5;
 
@@ -52,20 +50,21 @@ TR = 2.5;
 % 8. num_repetitions - No. of repetitions (L1 regularisation).
 
 dfnc_params.tc_detrend = 3;
-dfnc_params.tc_despike = 'yes';
+dfnc_params.tc_despike = 'yes';  
 dfnc_params.tc_filter = 0.15;
 
 dfnc_params.tc_covariates.filesList = [];
 dfnc_params.tc_covariates.file_numbers = [];
 
 dfnc_params.method = 'none';
-dfnc_params.wsize = 30;  % **重要的参数之一，滑动窗的大小**
+dfnc_params.wsize = 22;  % **重要的参数之一，滑动窗的大小**
 dfnc_params.window_alpha = 3;
 dfnc_params.num_repetitions = 10;
 
 %% Post-processing (K-means on dfnc corrleations, meta state analysis)
 % Number of clusters extracted from windowed dfnc correlations using standard dfnc approach
-postprocess.num_clusters = 4;
+postprocess.estimate_clusters = 'yes';  % 自动确定最佳的K
+% postprocess.num_clusters = 4;
 
 
 % Meta state analysis
@@ -74,7 +73,7 @@ postprocess.ica.num_comps = 4;
 
 % ICA algorithm used in meta state analysis. 
 % Options are 'Infomax', 'Fast ICA', 'Erica', 'Simbec', 'Evd', 'Jade Opac', 'Amuse', 'SDD ICA', 'Radical ICA', 'Combi', 'ICA-EBM', 'ERBM'
-postprocess.ica.algorithm = 'infomax';
+% postprocess.ica.algorithm = 'infomax';
 % Number of times ICA is run to get stable estimates using Minimum spanning
 % tree algorithm
 postprocess.ica.num_ica_runs = 5;
@@ -91,11 +90,3 @@ postprocess.dmethod = 'city';
 
 %% Save HTML report in directory html with suffix *dfnc*results*html
 postprocess.display_results = 0;
-
-%% Save it into *_dfnc.mat
-load(dfnc_param)
-dfncInfo.postprocess = postprocess;
-[path, file, suffix] = fileparts(dfnc_param);
-save(dfnc_param, 'dfncInfo');
-
-

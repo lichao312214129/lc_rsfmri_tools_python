@@ -2,7 +2,7 @@
 % =================================================================
 
 % =================================Inputs==================================
-input_file = 'F:\The_first_training\results\lc_mean_component_ica_s_all_.nii';
+input_file = 'F:\The_first_training\results\le_mean_component_ica_s_all_.nii';
 out_dir = 'F:\The_first_training\results\group_3d_componets';
 % =================================Inputs==================================
 

@@ -1,9 +1,10 @@
 % This script is used to extract components. Transform 4d to 3d.
 % =================================================================
 
-% Inputs
-input_dir = 'F:\The_first_training\results\subject_4d_componets';
-out_dir = 'F:\The_first_training\results\subject_3d_componets';
+% ==============================Inputs===================================
+input_dir = 'I:\results\sub_4d_components';
+out_dir = 'I:\results\sub_3d_components';
+% ==============================Inputs=================================
 
 % Mkdir
 if ~ exist(out_dir, 'dir')
