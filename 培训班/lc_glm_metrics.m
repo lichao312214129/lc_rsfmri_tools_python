@@ -40,6 +40,7 @@ num_transitions = state_vector_stats.num_transitions;
 [~, ~, suffix] = fileparts(covariance);
 if strcmp(suffix,  '.txt')
     cov = importdata(covariance);
+    error('Only supportted covariance type is excel');
     cov.data;
     cov.textdata;
 elseif suffix == '.xlsx'
