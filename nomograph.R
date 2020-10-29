@@ -39,10 +39,10 @@ options(datadist="dd")
 ## 第四步 构建模型
 ## 构建logisitc回归模型
 f1 <- lrm(status~ age + sex, data = lung) 
+f1 <- status~ age + sex
 
 ## 绘制logisitc回归的风险预测值的nomogram图
-nom <- nomogram(f1, fun= function(x)1/(1+exp(-x)), # or fun=plogis
-                lp=F, funlabel="Risk")
+nom <- nomogram(f1, fun= function(x)1/(1+exp(-x)),lp=F, funlabel="Risk")
 plot(nom)
 
 

@@ -1,0 +1,35 @@
+Traing dataset not include oters:
+acc = 0.9510869565217391
+auc = 0.9851233671988389
+f1score = 0.9577464788732395
+
+Test dataset:
+acc = 0.8307692307692308
+auc = 0.8740530303030303
+f1score = 0.8405797101449276
+
+Model is Pipeline(steps=[('reduce_dim', PCA(n_components=0.95, random_state=666)),
+                ('classify', LinearSVC(C=0.0001, random_state=666))])
+
+
+
+
+Traing dataset:
+acc = 0.9510869565217391
+auc = 0.9851233671988389
+f1score = 0.9577464788732395
+
+Test dataset:
+acc = 0.8307692307692308
+auc = 0.8731060606060606
+f1score = 0.8405797101449276
+
+Traing dataset only include number of nan:
+acc = 0.9510869565217391
+auc = 0.9851233671988389
+f1score = 0.9577464788732395
+
+Test dataset:
+acc = 0.8307692307692308
+auc = 0.8740530303030303
+f1score = 0.8405797101449276
