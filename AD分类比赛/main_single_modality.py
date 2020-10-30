@@ -82,4 +82,4 @@ def main(metric="FA", include_diagnoses=(1,3)):
 
 
 if __name__ ==  "__main__":
-    main("CL")
+    main("FA")

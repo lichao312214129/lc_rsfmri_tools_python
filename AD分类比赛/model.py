@@ -34,17 +34,25 @@ class Model(object):
         # self.regularization_strength = np.linspace(0.0001, 100, 2)
         self.regularization_strength = [0.0001]
     
-    def denan(self, data, label):
+    def denan(self, data, label, fill=False):
         """
         De-nan 
         """
-
-        idx_nan = np.sum(np.isnan(data),axis=1) > 0  # Drop the case if have any nan
+        
         if not isinstance(data, pd.core.frame.DataFrame):
-            data = pd.DataFrame(data)
-        data_ = data.dropna().values
-        label_ = label[idx_nan == False]
-        return data_, label_
+                data = pd.DataFrame(data)
+        
+        value = data.mean()
+        if fill:
+            data_ = data.fillna(value=value)
+            # data_ = data_.fillna(values=)
+            label_ = label
+        else:       
+            idx_nan = np.sum(np.isnan(data),axis=1) > 0  # Drop the case if have any nan
+            data_ = data.dropna().values
+            label_ = label[idx_nan == False]
+            
+        return data_, label_, value
     
     def preprocess_(self, data):
         """
@@ -111,7 +119,7 @@ class Model(object):
         ])
 
         param_grid = {
-            'reduce_dim__n_components': [0.99],
+            'reduce_dim__n_components': [0.83],
             'classify__C': [0.0001]
         }
         
@@ -220,7 +228,7 @@ class Model(object):
         predict_proba = [pred[0] for pred in predict_results]
         predict_proba = [dec[:,-1] if len(np.shape(dec)) > 1 else dec for dec in predict_proba]
         predict_proba = pd.DataFrame(predict_proba).T.values
-        predict_proba = np.mean(predict_proba, axis=1)
+        predict_proba = np.median(predict_proba, axis=1)
 
         prediction = [pred[1] for pred in predict_results]
         prediction = pd.DataFrame(prediction).T.values
@@ -245,7 +253,7 @@ class Model(object):
         lcode=preprocessing.LabelEncoder()
         real_label=lcode.fit_transform(real_label)
         prediction = lcode.transform(prediction)
-        
+        report = metrics.classification_report(real_label, prediction)
         acc = metrics.accuracy_score(real_label, prediction)
         if len(np.unique(real_label)) == 2:
             decision_ = decision[:,-1] if len(np.shape(decision)) > 1 else decision
@@ -255,31 +263,6 @@ class Model(object):
         else:
             auc = np.nan
             f1 = np.nan
-        return acc, auc, f1, metrics.confusion_matrix(real_label, prediction)
-
-
-if __name__ ==  "__main__": 
-    model = Model()
-    # Denan
-    data_train_, label_train_ = model.denan(data_train["AD"], label_train)
-    data_val_, label_val_ = model.denan(data_validation["AD"], label_validation)
-    
-    # Preprocessing
-    scaler, data_train_ = model.preprocess_(data_train_)
-    data_val_ = scaler.transform(data_val_)
-
-    # Feature selection
-    data_train_, label_train_ = model.feature_selection(data_train_, label_train_)
-    data_val_, label_val_ = model.feature_selection(data_val_, label_val_)
-
-    # Fit
-    clf = model.train_linearSVC(data_train_, label_train_)
-    
-    # Predict
-    predict_proba, prediction = model.predict(clf,data_val_)
-    
-    # Evaluation
-    acc, auc, f1, confmat = model.evaluate(label_val_, predict_proba, prediction)
-    
+        return acc, auc, f1, metrics.confusion_matrix(real_label, prediction), report
     
     

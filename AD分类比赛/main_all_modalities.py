@@ -6,8 +6,11 @@ Created on Wed Oct 28 15:45:42 2020
 """
 
 import numpy as np
+import pandas as pd
 import pickle
 import os
+from collections import Counter
+from imblearn.over_sampling import RandomOverSampler
 
 from model import Model
 from split import (data_train, data_validation, data_test, 
@@ -65,26 +68,37 @@ def main(include_diagnoses=(1,3)):
     # data_validation_ = np.hstack([data_validation_, mean_num_na_validation_, demo_validation_])
 
     # Denan
-    data_train_, label_train_ = model.denan(data_train_, label_train_)
-    data_validation_, label_validation_ = model.denan(data_validation_, label_validation_)
-    data_test_, label_test_ = model.denan(data_test_, label_test_)
+    data_train_, label_train_, value = model.denan(data_train_, label_train_, fill=True)
+    data_validation_ = pd.DataFrame(data_validation_).fillna(value=value)
+    data_test_ = pd.DataFrame(data_test_).fillna(value=value)
+
+    # data_validation_, label_validation_ = model.denan(data_validation_, label_validation_, fill=True)
+    # data_test_, label_test_ = model.denan(data_test_, label_test_, fill=True)
     
     # Preprocessing
     scaler, data_train_ = model.preprocess_(data_train_)
     data_validation_ = scaler.transform(data_validation_)
     data_test_ = scaler.transform(data_test_)
     
+    # Re-sample
+    ros = RandomOverSampler(random_state=0)
+    print(Counter(label_train_))
+    data_train_, label_train_ = ros.fit_sample(data_train_, label_train_)
+    print(Counter(label_train_))
+
     # Feature selection
     # rfecv, data_train_ = model.feature_selection(LinearSVC(random_state=666), data_train_, label_train_)
     # data_validation_ = rfecv.transform(data_validation_)
         
     # Fit
+    # TODO: 使用sklearn的自动调参
     clf1 = model.train_linearSVC(data_train_, label_train_)
     clf2 = model.train_SVC(data_train_, label_train_)
-    # clf3 = model.train_logistic_regression(data_train_, label_train_)
-    # clf4 = model.train_ridge_regression(data_train_, label_train_)
-    # clf5 = model.train_randomforest(data_train_, label_train_)
-    clfs = [clf1, clf2]
+    clf3 = model.train_logistic_regression(data_train_, label_train_)
+    clf4 = model.train_ridge_regression(data_train_, label_train_)
+    clf5 = model.train_randomforest(data_train_, label_train_)
+    # TODO: 增加融合模型中的子模型数量
+    clfs = [clf1, clf2, clf3, clf4, clf5]
     
     # Merge models
     merged_model = model.merge_models(data_train_, label_train_, *clfs)
@@ -100,22 +114,22 @@ def main(include_diagnoses=(1,3)):
     pickle.dump(all_models, open(save_file, "wb"))
     
     # Predict
-    predict_proba_train, prediction_train = model.merge_predict(all_models["merged_model"], data_train_, *all_models["orignal_models"])
-    predict_proba_validation, prediction_validation = model.merge_predict(all_models["merged_model"], data_validation_, *all_models["orignal_models"])
-    predict_proba_test, prediction_test = model.merge_predict(all_models["merged_model"], data_test_, *all_models["orignal_models"])
+    predict_proba_train, prediction_train = model.vote_predict(all_models["merged_model"], data_train_, *all_models["orignal_models"])
+    predict_proba_validation, prediction_validation = model.vote_predict(all_models["merged_model"], data_validation_, *all_models["orignal_models"])
+    predict_proba_test, prediction_test = model.vote_predict(all_models["merged_model"], data_test_, *all_models["orignal_models"])
     
     # predict_proba_train, prediction_train = model.predict(clf2, data_train_)
     # predict_proba_validation, prediction_validation = model.predict(clf2, data_validation_)
     
     # Evaluation
-    acc_train, auc_train, f1_train, confmat_train = model.evaluate(label_train_, predict_proba_train, prediction_train)
-    acc_validation, auc_validation, f1_validation, confmat_validation = model.evaluate(label_validation_, predict_proba_validation, prediction_validation)
-    acc_test, auc_test, f1_test, confmat_test = model.evaluate(label_test_, predict_proba_test, prediction_test)
+    acc_train, auc_train, f1_train, confmat_train, report_train = model.evaluate(label_train_, predict_proba_train, prediction_train)
+    acc_validation, auc_validation, f1_validation, confmat_validation, report_validation = model.evaluate(label_validation_, predict_proba_validation, prediction_validation)
+    acc_test, auc_test, f1_test, confmat_test, report_test = model.evaluate(label_test_, predict_proba_test, prediction_test)
     print(f"Traing dataset:\nacc = {acc_train}\nauc = {auc_train}\nf1score = {f1_train}\n")
     print(f"Validation dataset:\nacc = {acc_validation}\nauc = {auc_validation}\nf1score = {f1_validation}\n")
-    # print(f"Test dataset:\nacc = {acc_test}\nauc = {auc_test}\nf1score = {f1_test}\n")
+    print(f"Test dataset:\nacc = {acc_test}\nauc = {auc_test}\nf1score = {f1_test}\n")
     # print(f"Model is {clf1.best_estimator_}")
-    return (predict_proba_train, prediction_train, predict_proba_validation, prediction_validation)
+    return (predict_proba_train, prediction_train, report_train, predict_proba_validation, prediction_validation, report_validation)
 
 
 if __name__ ==  "__main__":

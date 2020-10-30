@@ -99,7 +99,7 @@ def app(data_file=None,
     predict_proba, predict_label = model.merge_predict(all_models["merged_model"], data, *all_models["orignal_models"])
 
     # Evaluation
-    acc, auc, f1, confmat = model.evaluate(real_label, predict_proba, predict_label)
+    acc, auc, f1, confmat, report = model.evaluate(real_label, predict_proba, predict_label)
     print(f"Traing dataset:\nacc = {acc}\nauc = {auc}\nf1score = {f1}\n")
 
     return predict_proba, predict_label
