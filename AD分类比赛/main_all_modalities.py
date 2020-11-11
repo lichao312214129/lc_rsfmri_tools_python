@@ -12,12 +12,12 @@ import os
 from collections import Counter
 from imblearn.over_sampling import RandomOverSampler
 
-from model import Model
-from split import (data_train, data_validation, data_test, 
-    label_train, label_validation, label_test, 
-    mean_num_na_train,mean_num_na_validation,mean_num_na_test, 
-    demo_train, demo_validation, demo_test)
+from split import split
+from ensemble_model import Model
 from preprocess import METRICS
+
+(data_train, data_validation, data_test, 
+label_train, label_validation, label_test) = split(seed=66)
 
 
 def main(include_diagnoses=(1,3)):
@@ -26,7 +26,7 @@ def main(include_diagnoses=(1,3)):
     Parameters:
     ----------
     include_diagnoses: tuple or list
-        which groups/diagnoses included in training and validation, such as (1,3)
+        Which groups/diagnoses included in training and validation, such as (1,3)
     """
 
     # Instantiate model
@@ -50,18 +50,12 @@ def main(include_diagnoses=(1,3)):
 
     label_train_ = label_train[idx_train]
     data_train_ = data_train_all_mod[idx_train]
-    # demo_train_ = demo_train[idx_train]
-    # mean_num_na_train_ = mean_num_na_train[idx_train].reshape([-1,1])
 
     label_validation_ =  label_validation[idx_validation]
     data_validation_ = data_validation_all_mod[idx_validation]
-    # demo_validation_ = demo_validation[idx_validation]
-    # mean_num_na_validation_ = mean_num_na_validation[idx_validation].reshape([-1,1])
 
     label_test_ =  label_test[idx_test]
     data_test_ = data_test_all_mod[idx_test]
-    # demo_test_ = demo_test[idx_test]
-    # mean_num_na_test_ = mean_num_na_test[idx_test].reshape([-1,1])
 
     # Concatenate all features
     # data_train_ = np.hstack([data_train_, mean_num_na_train_, demo_train_])
@@ -71,9 +65,6 @@ def main(include_diagnoses=(1,3)):
     data_train_, label_train_, value = model.denan(data_train_, label_train_, fill=True)
     data_validation_ = pd.DataFrame(data_validation_).fillna(value=value)
     data_test_ = pd.DataFrame(data_test_).fillna(value=value)
-
-    # data_validation_, label_validation_ = model.denan(data_validation_, label_validation_, fill=True)
-    # data_test_, label_test_ = model.denan(data_test_, label_test_, fill=True)
     
     # Preprocessing
     scaler, data_train_ = model.preprocess_(data_train_)
@@ -85,52 +76,45 @@ def main(include_diagnoses=(1,3)):
     print(Counter(label_train_))
     data_train_, label_train_ = ros.fit_sample(data_train_, label_train_)
     print(Counter(label_train_))
-
-    # Feature selection
-    # rfecv, data_train_ = model.feature_selection(LinearSVC(random_state=666), data_train_, label_train_)
-    # data_validation_ = rfecv.transform(data_validation_)
         
     # Fit
-    # TODO: 使用sklearn的自动调参
-    clf1 = model.train_linearSVC(data_train_, label_train_)
-    clf2 = model.train_SVC(data_train_, label_train_)
-    clf3 = model.train_logistic_regression(data_train_, label_train_)
-    clf4 = model.train_ridge_regression(data_train_, label_train_)
-    clf5 = model.train_randomforest(data_train_, label_train_)
-    # TODO: 增加融合模型中的子模型数量
-    clfs = [clf1, clf2, clf3, clf4, clf5]
+    clf1 = model.make_linearSVC()
+    clf2 = model.make_SVC()
+    clf3 = model.make_logistic_regression()
+    clf4 = model.make_ridge_regression()
+    clf5 = model.make_xgboost()
+    clf6 = model.make_gradientboosting()
+    clfs = [clf1, clf2, clf3, clf4, clf5, clf6]
+    # clfs = [clf1]
     
     # Merge models
-    merged_model = model.merge_models(data_train_, label_train_, *clfs)
+    merged_model = model.train_ensemble_classifier(data_train_, label_train_, *clfs)
     
     # Dict models and scaler
-    all_models = {"orignal_models": clfs, "merged_model": merged_model, "scaler": scaler}
+    model_and_param = {"merged_model": merged_model, "fill_value": value, "scaler": scaler}
     
     # Save original models, merged model and scaler
     groups = ["nc","mci","ad"]
     save_name = [groups[include_diagnoses_-1] for include_diagnoses_ in include_diagnoses]
-    save_name = "model_all_modalities_" + "VS".join(save_name) + ".pickle.dat"
+    save_name = "ensemble_model_" + "VS".join(save_name) + ".pickle.dat"
     save_file = os.path.join("D:\My_Codes\lc_private_codes\AD分类比赛", save_name)
-    pickle.dump(all_models, open(save_file, "wb"))
+    pickle.dump(model_and_param, open(save_file, "wb"))
     
     # Predict
-    predict_proba_train, prediction_train = model.vote_predict(all_models["merged_model"], data_train_, *all_models["orignal_models"])
-    predict_proba_validation, prediction_validation = model.vote_predict(all_models["merged_model"], data_validation_, *all_models["orignal_models"])
-    predict_proba_test, prediction_test = model.vote_predict(all_models["merged_model"], data_test_, *all_models["orignal_models"])
-    
-    # predict_proba_train, prediction_train = model.predict(clf2, data_train_)
-    # predict_proba_validation, prediction_validation = model.predict(clf2, data_validation_)
+    predict_proba_train, prediction_train = model.predict(merged_model, data_train_)
+    predict_proba_validation, prediction_validation = model.predict(merged_model, data_validation_)
+    predict_proba_test, prediction_test = model.predict(merged_model, data_test_)
     
     # Evaluation
     acc_train, auc_train, f1_train, confmat_train, report_train = model.evaluate(label_train_, predict_proba_train, prediction_train)
     acc_validation, auc_validation, f1_validation, confmat_validation, report_validation = model.evaluate(label_validation_, predict_proba_validation, prediction_validation)
     acc_test, auc_test, f1_test, confmat_test, report_test = model.evaluate(label_test_, predict_proba_test, prediction_test)
-    print(f"Traing dataset:\nacc = {acc_train}\nauc = {auc_train}\nf1score = {f1_train}\n")
-    print(f"Validation dataset:\nacc = {acc_validation}\nauc = {auc_validation}\nf1score = {f1_validation}\n")
-    print(f"Test dataset:\nacc = {acc_test}\nauc = {auc_test}\nf1score = {f1_test}\n")
-    # print(f"Model is {clf1.best_estimator_}")
+    print(f"Traing dataset:\nacc = {acc_train}\nf1score = {f1_train}\nauc = {auc_train}\n")
+    print(f"Validation dataset:\nacc = {acc_validation}\nf1score = {f1_validation}\nauc = {auc_validation}\n")
+    # print(f"Test dataset:\nacc = {acc_test}\nauc = {auc_test}\nf1score = {f1_test}\n")
+    # print(f"Model is {clfs[0].best_estimator_}")
     return (predict_proba_train, prediction_train, report_train, predict_proba_validation, prediction_validation, report_validation)
 
 
 if __name__ ==  "__main__":
-    predict_proba_train, prediction_train, predict_proba_validation, prediction_validation = main(include_diagnoses=(1,3))
+    (predict_proba_train, prediction_train, report_train, predict_proba_validation, prediction_validation, report_validation) = main(include_diagnoses=(1,3))

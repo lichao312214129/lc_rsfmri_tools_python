@@ -16,7 +16,6 @@ METRICS = ["FA", "MD", "RD", "AD", "CL", "VOLUME"]
 def preprocess(file, 
     feature_name="train_set", 
     label_name="train_diagnose", 
-    demographics_name="train_population",
     num_sub=700):
 
     """ Preprocess data
@@ -32,8 +31,7 @@ def preprocess(file,
     feature = data_struct[feature_name]
     label = data_struct[label_name]
     label = np.int32(label)
-    demo = data_struct[demographics_name]
-    demo = np.float32(demo)
+    # demo = data_struct[demographics_name]
     
 # =============================================================================
 #     all_num_an = {}
@@ -73,11 +71,11 @@ def preprocess(file,
             num_na += np.int32(na)  # Number of nan of each subject
             
         data_for_all[metrics_] = data_for_one_metric
-        mean_num_na = num_na/len(METRICS)
+        # mean_num_na = num_na/len(METRICS)
         
-    return data_for_all, mean_num_na, demo, label
+    return data_for_all, label
 
 if __name__ == "__main__":
     file = r'F:\AD分类比赛\MCAD_AFQ_competition.mat'
-    data_for_all, mean_num_na, demo, label = preprocess(file)
+    data_for_all, label = preprocess(file)
     

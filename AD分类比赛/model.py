@@ -18,10 +18,9 @@ from sklearn.linear_model import RidgeClassifier
 from sklearn.linear_model import LogisticRegression, LogisticRegressionCV
 from sklearn.svm import LinearSVC, SVC
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.ensemble import StackingClassifier
+from xgboost import XGBClassifier
+from sklearn.ensemble import VotingClassifier
 from sklearn import metrics
-
-from split import data_train, data_validation, data_test, label_train, label_validation, label_test
 
 
 class Model(object):
@@ -29,10 +28,10 @@ class Model(object):
     def __init__(self):
         self.file = r'F:\AD分类比赛\MCAD_AFQ_competition.mat'
         self.seed = 666
-        # self.pca_n_component = np.linspace(0.5, 0.99, 2)
-        self.pca_n_component = [0.95]
-        # self.regularization_strength = np.linspace(0.0001, 100, 2)
-        self.regularization_strength = [0.0001]
+        self.pca_n_component = np.linspace(0.7, 0.99, 2)
+        # self.pca_n_component = [0.95]
+        self.regularization_strength = np.logspace(-3, 3, 3)
+        # self.regularization_strength = [0.0001]
     
     def denan(self, data, label, fill=False):
         """
@@ -85,8 +84,8 @@ class Model(object):
         ])
 
         param_grid = {
-            'reduce_dim__n_components': [0.99],
-            'classify__alpha': [0.0001]
+            'reduce_dim__n_components': self.pca_n_component,
+            'classify__alpha': self.regularization_strength
         }
         
         grid = GridSearchCV(pipe, cv=5, n_jobs=1, param_grid=param_grid,
@@ -119,8 +118,8 @@ class Model(object):
         ])
 
         param_grid = {
-            'reduce_dim__n_components': [0.83],
-            'classify__C': [0.0001]
+            'reduce_dim__n_components': self.pca_n_component,
+            'classify__C': self.regularization_strength
         }
         
         grid = GridSearchCV(pipe, cv=5, n_jobs=1, param_grid=param_grid,
@@ -136,8 +135,8 @@ class Model(object):
         ])
 
         param_grid = {
-            'reduce_dim__n_components': [0.95],
-            'classify__C': [2]
+            'reduce_dim__n_components': self.pca_n_component,
+            'classify__C': self.regularization_strength
         }
         
         grid = GridSearchCV(pipe, cv=5, n_jobs=1, param_grid=param_grid,
@@ -162,6 +161,29 @@ class Model(object):
 
         grid.fit(feature, label)
         return grid
+
+    def train_voting_classifier(self, feature, label, *args):
+        """Using sklearn VotingClassifier to train multiple classifiers
+
+        Parameters:
+        ----------
+        feature: ~
+        label: ~
+        *args: original models
+
+        Returns:
+        --------
+        clf: trained voting model
+        """
+        
+        if len(args) == 1:
+            clf = args[0]
+        else:
+            clf = VotingClassifier(estimators=[('xgb', clf1), ('rf', clf2), ('svc', clf3)], voting='hard')
+            
+        # Fit ensemble model
+        clf.fit(feature, label)
+        return clf
 
     def merge_models(self, feature, label, *args):
         """Merge all selected models' predictions
@@ -228,11 +250,16 @@ class Model(object):
         predict_proba = [pred[0] for pred in predict_results]
         predict_proba = [dec[:,-1] if len(np.shape(dec)) > 1 else dec for dec in predict_proba]
         predict_proba = pd.DataFrame(predict_proba).T.values
-        predict_proba = np.median(predict_proba, axis=1)
-
-        prediction = [pred[1] for pred in predict_results]
-        prediction = pd.DataFrame(prediction).T.values
-        prediction = np.array([np.argmax(np.bincount(prediction[i,:])) for i in range(len(prediction))])
+        # TODO: Standardize the predict_proba for merging
+        scaler = StandardScaler()
+        predict_proba = scaler.fit_transform(predict_proba)
+        predict_proba = np.mean(predict_proba, axis=1)
+        
+        prediction = np.int16(predict_proba > 0)
+        
+        # prediction = [pred[1] for pred in predict_results]
+        # prediction = pd.DataFrame(prediction).T.values
+        # prediction = np.array([np.argmax(np.bincount(prediction[i,:])) for i in range(len(prediction))])
     
         return predict_proba, prediction
     
