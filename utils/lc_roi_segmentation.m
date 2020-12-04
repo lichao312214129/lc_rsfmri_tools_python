@@ -84,7 +84,7 @@ if ~exist(out_dir)
     mkdir(out_dir)
 end
 
-% Load roi roi
+% Load roi
 [roi, header_roi] = y_Read(roi2segment);
 [dim1, dim2, dim3] = size(roi);
 roi_mask = reshape(roi, dim1*dim2*dim3, [])' ~= 0;

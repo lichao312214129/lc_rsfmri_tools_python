@@ -15,13 +15,18 @@ from sklearn.decomposition import PCA
 from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import Pipeline
 from sklearn.feature_selection import RFECV
-from sklearn.linear_model import RidgeClassifier
+from sklearn.linear_model import RidgeClassifier, Lasso
 from sklearn.linear_model import LogisticRegression, LogisticRegressionCV
 from sklearn.svm import LinearSVC, SVC
 from sklearn.ensemble import RandomForestClassifier
 from xgboost import XGBClassifier
 from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.gaussian_process import GaussianProcessClassifier
+from sklearn.gaussian_process.kernels import RBF
+from sklearn.neural_network import MLPClassifier
 from sklearn.ensemble import StackingClassifier
+from sklearn import tree
+from sklearn.naive_bayes import GaussianNB
 from sklearn import metrics
 
 
@@ -31,9 +36,9 @@ class Model(object):
         self.file = r'F:\AD分类比赛\MCAD_AFQ_competition.mat'
         self.seed = 666
         # self.pca_n_component = np.linspace(0.7, 0.99, 5)
-        self.pca_n_component = [0.95]
+        self.pca_n_component = 0.95
         # self.regularization_strength = np.logspace(-4, 2, 10)
-        self.regularization_strength = [0.0001]
+        self.regularization_strength = 0.0001
     
     def denan(self, data, label, fill=True):
         """
@@ -48,12 +53,7 @@ class Model(object):
             If True then fill nan with values (hear is mean of each feature)
             if False then drop whole feature of one case if any nan in this case.
         """
-        # import numpy as np
-        # x = [1,2,3,98,99,10000]
-        # q1 = np.percentile(x,25) # 1st quartile
-        # q3 = np.percentile(x,75) # 3st quartile
-        # up = q3 + 1.5 * (q3 - q1)
-        # down = q1 - 1.5 * (q3 - q1)
+
 
         if not isinstance(data, pd.core.frame.DataFrame):
                 data = pd.DataFrame(data)
@@ -94,112 +94,144 @@ class Model(object):
         return selector, data_
 
     def make_xgboost(self):
-        clf = XGBClassifier(learning_rate=0.1, alpha=22, objective='binary:logistic', random_state=self.seed)
+        pipe = Pipeline([
+        ('feature_selection', SelectFromModel(LinearSVC(C=0.01, penalty="l1", dual=False))),  # C=0.014
+         ('classify', XGBClassifier(learning_rate=0.1, alpha=22, objective='binary:logistic', random_state=self.seed)),
+         # ('classify', XGBClassifier(learning_rate=0.1, alpha=14.3, objective='binary:logistic', random_state=self.seed)),
+        # ('classify', XGBClassifier(learning_rate=0.1, alpha=22, objective='binary:logistic', random_state=self.seed)),
+        ])
+        return pipe
 
-        # pipe = Pipeline([
-        # # ('feature_selection', RFECV(LinearSVC(), step=0.1, cv=3)),
-        # ('reduce_dim', PCA(random_state=self.seed)),
-        # ('classify', clf),
-        # ])
+    def make_ridge_regression(self):
+        pipe = Pipeline([
+        ('feature_selection', SelectFromModel(LinearSVC(C=0.0138, penalty="l1", dual=False))),
+        # ('feature_selection', SelectPercentile(f_classif, percentile=96)),
+        # ('reduce_dim', PCA(n_components=0.95, random_state=self.seed)),
+        ('classify', RidgeClassifier(alpha=1, random_state=self.seed)),
+        ])
 
         # param_grid = {
-        #     # 'feature_selection__step': [0.3],
+        #     'feature_selection__percentile': [85],
         #     'reduce_dim__n_components': self.pca_n_component,
-        #     'classify__alpha': [22],
+        #     'classify__alpha': self.regularization_strength
         # }
         
         # grid = GridSearchCV(pipe, cv=5, n_jobs=1, param_grid=param_grid,
         #                     scoring='accuracy', refit=True)
-
-        return clf
-
-    def make_gradientboosting(self):
-        clf = GradientBoostingClassifier(learning_rate=0.1, random_state=self.seed)
-
-        pipe = Pipeline([
-        ('feature_selection', SelectFromModel(LinearSVC(penalty="l1", dual=False))),
-        ('reduce_dim', PCA(random_state=self.seed)),
-        ('classify', clf),
-        ])
-
-        param_grid = {
-            # 'feature_selection__dual': [False],
-            'reduce_dim__n_components': self.pca_n_component,
-            'classify__min_samples_split': [2]
-        }
-        
-        grid = GridSearchCV(pipe, cv=5, n_jobs=1, param_grid=param_grid,
-                            scoring='accuracy', refit=True)
-        return grid
-
-    def make_ridge_regression(self):
-        pipe = Pipeline([
-        ('feature_selection', SelectPercentile(f_classif, percentile=80)),
-        ('reduce_dim', PCA(random_state=self.seed)),
-        ('classify', RidgeClassifier(random_state=self.seed)),
-        ])
-
-        param_grid = {
-            'feature_selection__percentile': [85],
-            'reduce_dim__n_components': self.pca_n_component,
-            'classify__alpha': self.regularization_strength
-        }
-        
-        grid = GridSearchCV(pipe, cv=5, n_jobs=1, param_grid=param_grid,
-                            scoring='accuracy', refit=True)
-        return grid
+        return pipe
 
     def make_logistic_regression(self):
         pipe = Pipeline([
-        ('feature_selection', SelectPercentile(f_classif, percentile=80)),
-        ('reduce_dim', PCA(random_state=self.seed)),
-        ('classify', LogisticRegression(random_state=self.seed)),
+        # ('feature_selection', SelectPercentile(f_classif, percentile=80)),
+        ('reduce_dim', PCA(n_components=0.95, random_state=self.seed)),
+        ('classify', LogisticRegression(C= 0.005, random_state=self.seed)),
         ])
 
-        param_grid = {
-            'feature_selection__percentile': [80],
-            'reduce_dim__n_components': self.pca_n_component,
-            'classify__C': self.regularization_strength
-        }
+        # param_grid = {
+        #     'feature_selection__percentile': [80],
+        #     'reduce_dim__n_components': self.pca_n_component,
+        #     'classify__C': self.regularization_strength
+        # }
         
-        grid = GridSearchCV(pipe, cv=5, n_jobs=1, param_grid=param_grid,
-                            scoring='accuracy', refit=True)
-        return grid
+        # grid = GridSearchCV(pipe, cv=5, n_jobs=1, param_grid=param_grid,
+        #                     scoring='accuracy', refit=True)
+        return pipe
 
     def make_linearSVC(self):
         pipe = Pipeline([
         ('feature_selection', SelectFromModel(LinearSVC(penalty="l2", dual=False))),
-        ('reduce_dim', PCA(random_state=self.seed)),
-        ('classify', LinearSVC(random_state=self.seed)),
+        # ('reduce_dim', PCA(n_components=0.99, random_state=self.seed)),
+        ('classify', LinearSVC(C=0.00003, random_state=self.seed)),
         ])
 
         param_grid = {
             # 'feature_selection__percentile': [60],
-            'reduce_dim__n_components': self.pca_n_component,
-            'classify__C': self.regularization_strength
+            # 'reduce_dim__n_components': self.pca_n_component,
+            'classify__C': [0.00001, 0.00003, 0.00006, 0.00009, 0.0001]
         }
         
         grid = GridSearchCV(pipe, cv=5, n_jobs=1, param_grid=param_grid,
                             scoring='accuracy', refit=True)
-        return grid
+        
+        return pipe
     
     def make_SVC(self):
         pipe = Pipeline([
-        ('feature_selection', SelectFromModel(LinearSVC(penalty="l2", dual=False))),
-        ('reduce_dim', PCA(random_state=self.seed)),
-        ('classify', SVC(random_state=self.seed, kernel='sigmoid')),
+        ('feature_selection', SelectFromModel(LinearSVC())),
+        # ('reduce_dim', PCA(n_components=0.95, random_state=self.seed)),
+        ('classify', SVC(C=0.5, random_state=self.seed, kernel='sigmoid')),
         ])
 
+        # param_grid = {
+        #     # 'feature_selection__percentile': [70],
+        #     'reduce_dim__n_components': self.pca_n_component,
+        #     'classify__C': [0.5]
+        # }
+        
+        # grid = GridSearchCV(pipe, cv=5, n_jobs=1, param_grid=param_grid,
+        #                     scoring='accuracy', refit=True)
+        return pipe
+    
+    def make_SVC_rbf(self):
+        pipe = Pipeline([
+        ('feature_selection', SelectFromModel(LogisticRegression())),
+        # ('reduce_dim', PCA(n_components=0.95, random_state=self.seed)),
+        ('classify', SVC(C=1, random_state=self.seed, kernel='rbf')),
+        ])
+
+        # param_grid = {
+        #     # 'feature_selection__percentile': [70],
+        #     'reduce_dim__n_components': self.pca_n_component,
+        #     'classify__C': [0.5]
+        # }
+        
+        # grid = GridSearchCV(pipe, cv=5, n_jobs=1, param_grid=param_grid,
+        #                     scoring='accuracy', refit=True)
+        return pipe
+    
+    def make_SVC_poly(self):
+        pipe = Pipeline([
+        # ('feature_selection', SelectFromModel(LinearSVC())),
+        ('reduce_dim', PCA(n_components=0.9, random_state=self.seed)),
+        ('classify', SVC(C=0.7, random_state=self.seed, kernel='poly')),
+        ])
+
+        # param_grid = {
+        #     # 'feature_selection__percentile': [70],
+        #     'reduce_dim__n_components': self.pca_n_component,
+        #     'classify__C': [0.5]
+        # }
+        
+        # grid = GridSearchCV(pipe, cv=5, n_jobs=1, param_grid=param_grid,
+        #                     scoring='accuracy', refit=True)
+        return pipe
+
+    def make_mlp(self):
+        pipe = Pipeline([
+        ('feature_selection', SelectFromModel(LinearSVC())),
+        # ('reduce_dim', PCA(n_components=0.95, random_state=self.seed)),
+        ('classify', MLPClassifier(solver='adam', epsilon=1e-5, max_iter=100, batch_size=40,
+                                   alpha=10, hidden_layer_sizes=(100, 50), random_state=self.seed)),
+        ])
+        
+        
         param_grid = {
-            # 'feature_selection__percentile': [70],
-            'reduce_dim__n_components': self.pca_n_component,
-            'classify__C': [0.5]
+            'classify__alpha': [10,12,13],
         }
         
         grid = GridSearchCV(pipe, cv=5, n_jobs=1, param_grid=param_grid,
                             scoring='accuracy', refit=True)
-        return grid
-
+        
+        return pipe
+    
+    def make_gnb(self):
+        pipe = Pipeline([
+        ('feature_selection', SelectFromModel(LinearSVC(C=0.0138, penalty="l1", dual=False))),
+        # ('reduce_dim', PCA(n_components=0.70, random_state=self.seed)),
+        ('classify', GaussianNB()),
+        ])
+        return pipe
+        
     def train_ensemble_classifier(self, feature, label, *args):
         """Using sklearn ensemble methods to train multiple classifiers
 

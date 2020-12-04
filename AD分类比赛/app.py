@@ -64,14 +64,14 @@ def app(data_file=None,
     
     # Get data and preprocessing
     data_for_all, real_label = preprocess(data_file, 
-                                                        feature_name=feature_name, 
-                                                        label_name=label_name, 
-                                                        num_sub=num_sub
+                                        feature_name=feature_name, 
+                                        label_name=label_name, 
+                                        num_sub=num_sub
     )
     
     # ========TEST==========
-    data_for_all = data_test
-    real_label = label_test
+    # data_for_all = data_test
+    # real_label = label_test
     # ========TEST==========
     
     if metric == "all":
@@ -85,9 +85,9 @@ def app(data_file=None,
         data = data_for_all[metric]
     
     # Get include diagnoses
-    idx = np.in1d(real_label, include_diagnoses)
-    real_label =  real_label[idx].reshape(-1,)
-    data = data[idx]
+    # idx = np.in1d(real_label, include_diagnoses)
+    # real_label =  real_label[idx].reshape(-1,)
+    # data = data[idx]
     
     # Denan
     data = pd.DataFrame(data).fillna(value=all_models["fill_value"])
@@ -99,8 +99,8 @@ def app(data_file=None,
     predict_proba, predict_label = model.predict(all_models["merged_model"], data)
 
     # Evaluation
-    acc, auc, f1, confmat, report = model.evaluate(real_label, predict_proba, predict_label)
-    print(f"Test dataset:\nacc = {acc}\nf1score = {f1}\nauc = {auc}\n")
+    # acc, auc, f1, confmat, report = model.evaluate(predict_label, predict_proba, predict_label)
+    # print(f"Test dataset:\nacc = {acc}\nf1score = {f1}\nauc = {auc}\n")
 
     return predict_proba, predict_label
 
@@ -111,15 +111,17 @@ if __name__ == "__main__":
     label_train, label_validation, label_test) = split(seed=66)
 
     # Parameters
-    data_file = r'F:\AD分类比赛\MCAD_AFQ_competition.mat'
-    include_diagnoses = (1,3)
-    feature_name = "train_set" 
-    label_name = "train_diagnose" 
-    demographics_name = "train_population"
-    num_sub = 700
-    model_file = r"D:\My_Codes\lc_private_codes\AD分类比赛\ensemble_model_biclass_1.dat"
+    data_file = r'F:\AD分类比赛\mcadi_afq_test\MCAD_AFQ_test.mat'
+    include_diagnoses = (1,2, 3)
+    feature_name = "test_set" 
+    label_name = "test_sites" 
+    demographics_name = "test_population"
+    num_sub = 125
+    model_file = r"D:\My_Codes\lc_private_codes\AD分类比赛\ensemble_model_ncVSmciVSad.pickle.dat"
     
     # Predict
     predict_proba, predict_label = app(data_file=data_file, metric="all", include_diagnoses=include_diagnoses, 
         num_sub=num_sub, feature_name=feature_name, label_name=label_name, model_file=model_file
     )
+    
+   

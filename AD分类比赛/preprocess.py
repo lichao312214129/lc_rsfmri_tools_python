@@ -15,8 +15,7 @@ METRICS = ["FA", "MD", "RD", "AD", "CL", "VOLUME"]
 
 def preprocess(file, 
     feature_name="train_set", 
-    label_name="train_diagnose", 
-    num_sub=700):
+    label_name="train_diagnose"):
 
     """ Preprocess data
 
@@ -56,7 +55,7 @@ def preprocess(file,
     
     # Fibers index the needed to drop are 4,6,7
     data_for_all = {}
-    num_na = np.zeros([num_sub,], dtype=np.int32)
+    # num_na = np.zeros([num_sub,], dtype=np.int32)
     for metrics_ in METRICS:
         for i, feature_ in enumerate(feature):
             data = feature_[metrics_][0]

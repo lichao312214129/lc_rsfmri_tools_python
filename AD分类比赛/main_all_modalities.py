@@ -9,15 +9,17 @@ import numpy as np
 import pandas as pd
 import pickle
 import os
+import time
 from collections import Counter
 from imblearn.over_sampling import RandomOverSampler
 
 from split import split
 from ensemble_model import Model
 from preprocess import METRICS
+from eslearn.model_evaluator import ModelEvaluator
 
 (data_train, data_validation, data_test, 
-label_train, label_validation, label_test) = split(seed=66)
+label_train, label_validation, label_test) = split(seed=0)
 
 
 def main(include_diagnoses=(1,3)):
@@ -66,6 +68,8 @@ def main(include_diagnoses=(1,3)):
     data_validation_ = pd.DataFrame(data_validation_).fillna(value=value)
     data_test_ = pd.DataFrame(data_test_).fillna(value=value)
     
+    coef_mat = np.corrcoef([data_train_.mean(), data_validation_.mean(), data_test_.mean()])
+    
     # Preprocessing
     scaler, data_train_ = model.preprocess_(data_train_)
     data_validation_ = scaler.transform(data_validation_)
@@ -83,9 +87,10 @@ def main(include_diagnoses=(1,3)):
     clf3 = model.make_logistic_regression()
     clf4 = model.make_ridge_regression()
     clf5 = model.make_xgboost()
-    clf6 = model.make_gradientboosting()
-    clfs = [clf1, clf2, clf3, clf4, clf5, clf6]
-    # clfs = [clf1]
+    clf6 = model.make_mlp()
+    clf7 = model.make_SVC_rbf()
+    clf8 = model.make_gnb()
+    clfs = [clf1, clf2, clf3, clf4, clf5, clf6, clf7, clf8]
     
     # Merge models
     merged_model = model.train_ensemble_classifier(data_train_, label_train_, *clfs)
@@ -111,10 +116,16 @@ def main(include_diagnoses=(1,3)):
     acc_test, auc_test, f1_test, confmat_test, report_test = model.evaluate(label_test_, predict_proba_test, prediction_test)
     print(f"Traing dataset:\nacc = {acc_train}\nf1score = {f1_train}\nauc = {auc_train}\n")
     print(f"Validation dataset:\nacc = {acc_validation}\nf1score = {f1_validation}\nauc = {auc_validation}\n")
-    # print(f"Test dataset:\nacc = {acc_test}\nauc = {auc_test}\nf1score = {f1_test}\n")
+    print(f"Test dataset:\nacc = {acc_test}\nf1score = {f1_test}\nauc = {auc_test}\n")
     # print(f"Model is {clfs[0].best_estimator_}")
+    res = ModelEvaluator().binary_evaluator(true_label=label_validation_, predict_label=prediction_validation, predict_prob=predict_proba_validation)
+    print(res)
     return (predict_proba_train, prediction_train, report_train, predict_proba_validation, prediction_validation, report_validation)
 
 
 if __name__ ==  "__main__":
+    st = time.time()
     (predict_proba_train, prediction_train, report_train, predict_proba_validation, prediction_validation, report_validation) = main(include_diagnoses=(1,3))
+    et = time.time()
+    print(et-st)
+
