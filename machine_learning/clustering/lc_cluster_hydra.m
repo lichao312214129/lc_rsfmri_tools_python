@@ -9,8 +9,10 @@ function lc_cluster_hydra(varargin)
 %           [--hc_dir,-hd]: directory of healthy controls' data
 %           [--feature_type, -ft]:  % 'fc' OR 'nii'
 %       OPTIONAL:
-%           [--patient_cov_file, -pcf]: csv file of patients' covariates
-%           [--hc_cov_file, -hcf]: csv file of healthy controls' covariates
+%           [--patient_cov_file, -pcf]: csv file of patients' covariates,
+%           subject name must be string.
+%           [--hc_cov_file, -hcf]: csv file of healthy controls'
+%           covariates, subject name must be string.
 %           [--mask_file, -mf]: mask file, default is empty
 %           [--is_pca, -ip]: if perform principal components analysis to reduce feature dimensions, default is 1
 %           [--explained_cov, -ec]: how many explained variance to retain, default is 0.95, range = (0, 1]
@@ -18,18 +20,18 @@ function lc_cluster_hydra(varargin)
 %           [--max_clustering_solutions, -maxcs]: the maximum number of clusters, default is 5
 %           [--cvfold, -cf]: inner number of cross validation to find best cluster, default is 5
 %           [--output_dir, -od]: output directory, default is current working directory
-%
+%      
 % OUTPUT:
 %       CIDX: sub-clustering assignments of the disease population (positive class).
 %       ARI: adjusted rand index measuring the overlap/reproducibility of clustering solutions across folds
 %       subtype_index: cell array, each cell contains a index of one cluster
 % EXAMPLE:
-% lc_cluster_hydra('-pd', 'D:\workstation_b\ZhangYue_Guangdongshengzhongyiyuan\data_clustering\Patient',...
-%                           '-hd', 'D:\workstation_b\ZhangYue_Guangdongshengzhongyiyuan\data_clustering\HC',... 
-%                           '-ft', 'fc',...
-%                           '-od', 'D:\workstation_b\ZhangYue_Guangdongshengzhongyiyuan\data_clustering',...
-%                           '-pcf', 'D:\workstation_b\ZhangYue_Guangdongshengzhongyiyuan\data_clustering\patient_cov.csv',...
-%                           '-hcf', 'D:\workstation_b\ZhangYue_Guangdongshengzhongyiyuan\data_clustering\hc_cov.csv');
+% lc_cluster_hydra('-pd', 'D:\My_Codes\lc_private_codes\The_first_ml_training\hydra\MDD',...
+%                           '-hd', 'D:\My_Codes\lc_private_codes\The_first_ml_training\hydra\HC',... 
+%                           '-ft', 'nii',...
+%                           '-od', 'D:\My_Codes\lc_private_codes\The_first_ml_training\hydra',...
+%                           '-pcf', 'D:\My_Codes\lc_private_codes\The_first_ml_training\hydra\p_cov.csv',...
+%                           '-hcf', 'D:\My_Codes\lc_private_codes\The_first_ml_training\hydra\c_cov.csv');
 % ----------------------------------------------------------------------------
 %   Please cite the article: Varol, Erdem, Aristeidis Sotiras, Christos Davatzikos.
 %   "HYDRA: Revealing heterogeneity of imaging and genetic patterns
@@ -146,17 +148,25 @@ end
 % Load cov
 if ~strcmp(patient_cov_file, '')
     patient_cov = importdata(patient_cov_file);
+    p_subname = patient_cov.textdata;
     patient_cov = patient_cov.data;
 else
     patient_cov = [];
 end
 if ~strcmp(hc_cov_file, '')
     hc_cov = importdata(hc_cov_file);
-    hc_cov = hc_cov.data;
+    hc_subname = hc_cov.textdata;
+    hc_cov = hc_cov.data; 
 else
     hc_cov = [];
 end
 all_cov = cat(1, patient_cov, hc_cov);
+% Give subject idx to cov and save to csv
+if ~isempty(all_cov)
+    all_cov_name = cat(1, p_subname, hc_subname);
+    all_cov = cat(2, all_cov_name, num2cell(all_cov));
+    writetable(cell2table(all_cov),fullfile(output_dir, 'cov_tmp.csv'),'WriteVariableNames', false);
+end
 
 % Mask
 if ~strcmp(mask_file, '')
@@ -168,9 +178,12 @@ if ~strcmp(mask_file, '')
     end
 else
     mask = ones(size(d_tmp_patients));
-    mask(tril(ones(size(mask))) == 1) = 0;
+    if strcmp(feature_type, 'fc')
+        mask(tril(ones(size(mask))) == 1) = 0;
+    else
+        mask = mask ~= 0;
+    end
 end
-mask = mask == 1;
 
 % Check
 if (~all(size(d_tmp_patients) == size(d_tmp_hc)))
@@ -183,12 +196,12 @@ if  (~all(size(mask) == size(d_tmp_hc)))
     return;
 end
 
-if length(patient_cov) ~= length(num_patient)
+if size(patient_cov,1) ~= num_patient
     error('Number of covariates is not match number of patients!');
     return;
 end
 
-if length(hc_cov) ~= length(num_hc)
+if size(hc_cov,1) ~= num_hc
     error('Number of covariates is not match number of hc!');
     return;
 end
@@ -230,28 +243,8 @@ data_all = cat(1,  data_patient, data_hc);
 
 % Generate unique ID and label
 label = [ones(num_patient, 1); zeros(num_hc, 1) - 1];
-subj = cat(1, patient_name, hc_name);
-ms = regexp(subj, '(?<=\w+)[1-9][0-9]*', 'match' );
-nms = length(ms);
-subjid = zeros(nms,1);
-for i = 1:nms
-    if isempty(ms{i})
-        tmp = ['99999',num2str(i)];
-    else
-        tmp = ms{i}{1};
-    end
-    subjid(i) = str2double(tmp);
-end
+subjid = cat(1, patient_name, hc_name);
 
-% Give subject idx to cov and save to csv
-if ~isempty(all_cov)
-    if length(all_cov) ~= length(subjid)
-        error('number of cov is not match the data!')
-    else
-        all_cov = cat(2, subjid, all_cov);
-        csvwrite(fullfile(output_dir, 'cov_tmp.csv'), all_cov);
-    end
-end
 % PCA
 if is_pca
     [COEFF, data_all_reduced,~,~,explained] = pca(data_all);
@@ -270,8 +263,8 @@ else
 end
 
 % save to csv
-data_to_csv = cat(2, subjid, data_all_reduced, label);
-csvwrite(fullfile(output_dir, 'cluster_tmp.csv'), data_to_csv);
+data_to_csv = cat(2, subjid, num2cell(data_all_reduced), num2cell(label));
+writetable(cell2table(data_to_csv),fullfile(output_dir, 'cluster_tmp.csv'),'WriteVariableNames', false);
 
 % Run HYDRA
 if ~isempty(all_cov)
