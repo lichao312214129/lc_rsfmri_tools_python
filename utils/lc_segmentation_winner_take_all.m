@@ -19,12 +19,12 @@ function lc_segmentation_winner_take_all(varargin)
 % OUTPUT:
 %       All subject level segmentation and one group level segmentation.
 % EXAMPLE:
-% lc_segmentation_winner_take_all('-dd', 'D:\WorkStation_2018\SZ_classification\Data\FunImgARWSDFC_206',...
+% lc_segmentation_winner_take_all('-dd', 'D:\yueyingkeji\tange\data',...
 %                           '-as', 'G:\BranAtalas\Template_Yeo2011\Yeo2011_7Networks_N1000.split_components.FSL_MNI152_3mm.nii',...
 %                           '-ni', 'D:\workstation_b\tange\netIndex.mat',...
 %                           '-rs', 'D:\workstation_b\tange\Amygdala_3_3_3.nii',...
 %                           '-mf', 'D:\WorkStation_2018\SZ_classification\Data\Atalas\sorted_brainnetome_atalas_3mm.nii',...
-%                           '-od', 'D:\workstation_b\tange');
+%                           '-od', 'D:\yueyingkeji\tange');
 % 
 
 help lc_segmentation_winner_take_all
@@ -124,14 +124,18 @@ atalas = atalas .* mask_org;
 % Load network_index
 network_index = importdata(network_index);
 
-% try
-%     parpool(n_workers)
-% catch
-%     fprintf('Parpool already running!\n')
-% end
+try
+    parpool(n_workers)
+catch
+    fprintf('Parpool already running!\n')
+end
 
+% Get one data dimension
+data_target = y_Read(datafile_path{1});
+data_target = reshape(data_target, dim1*dim2*dim3, [])';
+    
 coef_all = 0;
-for i = 1:n_sub
+parfor i = 1:n_sub
     fprintf('Running %d/%d\n', i, n_sub);
     disp('----------------------------------');
 
@@ -175,8 +179,9 @@ coef = coef_all ./ n_sub;
  
 % Step 5 is to segment the target region into several sub-regions.
 coef_max = max(abs(coef));
-segmentation = zeros(1,size(roi_signal,2));
-for j = 1: size(roi_signal,2)
+nVoxInROI = sum(roi_mask(:));
+segmentation = zeros(1,nVoxInROI);
+for j = 1: nVoxInROI
     segmentation(j) = find(abs(coef(:,j)) == coef_max(j));
 end
 % clear atalas  atalas_combined atalas_combined_all average_signals_other_regions coef coef_all
