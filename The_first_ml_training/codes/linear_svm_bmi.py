@@ -10,7 +10,7 @@ Created on Fri Dec 11 11:55:30 2020
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from  sklearn.svm import   SVC
+from  sklearn.svm import SVC
 
 # 生成训练数据集
 np.random.seed(666)
@@ -49,25 +49,25 @@ acc = np.sum((y_pred-y_test)==0)/len(y_test)
 print(f"acc={acc:.3f}")
 
 #%% 画出SVM分类情况
-plt.figure()
-plt.clf()
-plt.scatter(x_train[:, 0], x_train[:, 1], c=y_train, zorder=500, cmap=plt.cm.Paired,
-            edgecolor='k', s=20)
+# plt.figure()
+# plt.clf()
+# plt.scatter(x_train[:, 0], x_train[:, 1], c=y_train, zorder=500, cmap=plt.cm.Paired,
+#             edgecolor='k', s=20)
 
-plt.axis('tight')
-x_min = x_train[:, 0].min()
-x_max = x_train[:, 0].max()
-y_min = x_train[:, 1].min()
-y_max = x_train[:, 1].max()
+# plt.axis('tight')
+# x_min = x_train[:, 0].min()
+# x_max = x_train[:, 0].max()
+# y_min = x_train[:, 1].min()
+# y_max = x_train[:, 1].max()
 
-XX, YY = np.mgrid[x_min:x_max:200j, y_min:y_max:200j]
-Z = svm.decision_function(np.c_[XX.ravel(), YY.ravel()])
+# XX, YY = np.mgrid[x_min:x_max:200j, y_min:y_max:200j]
+# Z = svm.decision_function(np.c_[XX.ravel(), YY.ravel()])
 
-# Put the result into a color plot
-Z = Z.reshape(XX.shape)
-plt.pcolormesh(XX, YY, Z > 0, cmap=plt.cm.Paired)
-plt.contour(XX, YY, Z, colors=['k', 'k', 'k'],
-            linestyles=['--', '-', '--'], levels=[-.5, 0, .5])
+# # Put the result into a color plot
+# Z = Z.reshape(XX.shape)
+# plt.pcolormesh(XX, YY, Z > 0, cmap=plt.cm.Paired)
+# plt.contour(XX, YY, Z, colors=['k', 'k', 'k'],
+#             linestyles=['--', '-', '--'], levels=[-.5, 0, .5])
 
-plt.show()
+# plt.show()
 
