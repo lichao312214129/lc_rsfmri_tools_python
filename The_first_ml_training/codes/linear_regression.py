@@ -34,8 +34,5 @@ for index in range(max_cycles):
     delta_loss = (x*(yhat-y_true)).mean() # 当前loss在w上的导数， 即对w求导
     print(f"{index}:loss={loss:.5f}, w_fit={w_fit}")
     w_fit = w_fit - alpha * delta_loss  # 更新w_fit
-    
-    w_fit_all.append(w_fit)
-    loss_all.append(loss)
 
 print(f"拟合出的权重为{w_fit}")
