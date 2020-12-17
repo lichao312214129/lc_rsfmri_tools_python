@@ -3,13 +3,11 @@
 
 # In[59]:
 
-
 import os
 import scipy.io as sio
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import seaborn as sns
 import seaborn as sns
 from collections import Counter
 from sklearn.model_selection  import StratifiedShuffleSplit
@@ -128,8 +126,6 @@ data = data.reshape(n_sub,-1)
 # ### =============================划分数据=============================
 
 # In[68]:
-
-
 np.random.seed(0)
 skf = StratifiedShuffleSplit(n_splits=1, test_size=0.4, random_state=666)
 skf_index = list(skf.split(data, label_sorted))

@@ -3,7 +3,7 @@
 """ CNN for functional connectivity network
 
 Created on Mon Jul 15 15:04:21 2019
-This script is used to training validate and test a convolutional neural networ, finally using test data to test the model.
+This script is used to training validate and test a convolutional neural network, finally using test data to test the model.
 Validation data is used to optimize the super parameters. Test data must be used only once.
 @author: Li Chao <lichao19870617@gmail.com>
 If you think this code is useful, citing the easylearn software in your paper or code would be greatly appreciated!
@@ -25,10 +25,10 @@ from sklearn.metrics import roc_curve
 from sklearn.metrics import confusion_matrix
 
 # Arguments
-model_savepath = r'D:\WorkStation_2018\WorkStation_CNN_Schizo\Data\oldCNNdata\data'
+model_savepath = r'D:\WorkStation_2018\SZ_classification\Data\oldCNNdata\data'
 model_savename = 'model_7171806'
 is_savefig = False
-fig_savepath = r'D:\WorkStation_2018\WorkStation_CNN_Schizo\Data\oldCNNdata\data'
+fig_savepath = r'D:\WorkStation_2018\SZ_classification\Data\oldCNNdata\data'
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 # CNN's Hyper parameters
@@ -53,14 +53,14 @@ class Utils():
 	"""
 
 	def __init__(self):
-	    self.train_data_path = r'D:\WorkStation_2018\WorkStation_CNN_Schizo\Data\oldCNNdata\data\x_train304.npy'
-	    self.label_train_path = r'D:\WorkStation_2018\WorkStation_CNN_Schizo\Data\oldCNNdata\data\y_train304.npy'
+	    self.train_data_path = r'D:\WorkStation_2018\SZ_classification\Data\oldCNNdata\data\x_train304.npy'
+	    self.label_train_path = r'D:\WorkStation_2018\SZ_classification\Data\oldCNNdata\data\y_train304.npy'
 
-	    self.val_data_path = r'D:\WorkStation_2018\WorkStation_CNN_Schizo\Data\oldCNNdata\data\x_val76.npy'
-	    self.val_label_path = r'D:\WorkStation_2018\WorkStation_CNN_Schizo\Data\oldCNNdata\data\y_val76.npy'
+	    self.val_data_path = r'D:\WorkStation_2018\SZ_classification\Data\oldCNNdata\data\x_val76.npy'
+	    self.val_label_path = r'D:\WorkStation_2018\SZ_classification\Data\oldCNNdata\data\y_val76.npy'
 
-	    self.test_data_path = r'D:\WorkStation_2018\WorkStation_CNN_Schizo\Data\oldCNNdata\data\x_test206.npy'
-	    self.test_label_path = r'D:\WorkStation_2018\WorkStation_CNN_Schizo\Data\oldCNNdata\data\y_test206.npy'
+	    self.test_data_path = r'D:\WorkStation_2018\SZ_classification\Data\oldCNNdata\data\x_test206.npy'
+	    self.test_label_path = r'D:\WorkStation_2018\SZ_classification\Data\oldCNNdata\data\y_test206.npy'
 
 	def load_data(self):
 	    """Load data and label
