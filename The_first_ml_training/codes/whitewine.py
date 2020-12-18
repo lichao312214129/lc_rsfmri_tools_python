@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from imblearn.over_sampling import RandomOverSampler
 from collections import Counter
-from sklearn.preprocessing import StandardScaler, PolynomialFeatures
+from sklearn.preprocessing import StandardScaler, MinMaxScaler, PolynomialFeatures
 from sklearn.decomposition import PCA
 from sklearn.feature_selection import RFECV
 from sklearn.svm import LinearSVC
@@ -21,8 +21,8 @@ from sklearn.linear_model import LogisticRegression, RidgeClassifier, LassoCV, L
 from sklearn.metrics import confusion_matrix
 
 # 加载数据
-features_file = '../demo_data/features_white.csv'
-targets_file = '../demo_data/targets_white.csv'
+features_file = '../demo_data/features_whitewine.csv'
+targets_file = '../demo_data/targets_whitewine.csv'
 features = pd.read_csv(features_file)
 targets = pd.read_csv(targets_file)
 
@@ -66,9 +66,9 @@ targets_validation = targets[idx_validation]
 targets_test = targets[idx_test]
 
 # 平衡数据
-# print(f"Before re-sampling, the sample size are: {sorted(Counter(targets_train).items())}")
-# feature_train, targets_train = RandomOverSampler().fit_resample(feature_train, targets_train)
-# print(f"After re-sampling, the sample size are: {sorted(Counter(targets_train).items())}")
+print(f"Before re-sampling, the sample size are: {sorted(Counter(targets_train).items())}")
+feature_train, targets_train = RandomOverSampler().fit_resample(feature_train, targets_train)
+print(f"After re-sampling, the sample size are: {sorted(Counter(targets_train).items())}")
 
 # 数据规范化:zscore
 scaler = StandardScaler()
@@ -94,7 +94,7 @@ feature_validation = plf.transform(feature_validation)
 feature_test = plf.transform(feature_test)
 
 # 特征筛选1
-selector = Lasso(alpha=0.02)
+selector = Lasso(alpha=0.03)
 selector.fit(feature_train, targets_train)
 mask = selector.coef_ != 0
 feature_train = feature_train[:, mask] # 切记：要使用训练集的参数对验证集和测试集进行处理
@@ -120,4 +120,4 @@ print(acc_train, acc_validation)
 # pred_test = model.predict(feature_test)
 
 # acc = np.sum((pred_test - targets_test) == 0)/len(pred_test)
-# print(acc)s
+# print(acc)
