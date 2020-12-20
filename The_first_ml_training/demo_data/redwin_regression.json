@@ -1,0 +1,61 @@
+{
+    "data_loading": {
+        "whole": {
+            "modalities": {
+                "m1": {
+                    "file": [
+                        "D:/My_Codes/lc_private_codes/The_first_ml_training/demo_data/features_redwine.csv"
+                    ],
+                    "mask": ""
+                }
+            },
+            "targets": "D:/My_Codes/lc_private_codes/The_first_ml_training/demo_data/targets_redwine.csv",
+            "covariates": ""
+        }
+    },
+    "feature_engineering": {
+        "feature_preprocessing": {
+            "StandardScaler()": {}
+        },
+        "feature_selection": {
+            "RFECV()": {
+                "step": {
+                    "value": "0.10"
+                },
+                "cv": {
+                    "value": "5"
+                },
+                "estimator": {
+                    "value": "SVC(kernel='linear')"
+                },
+                "n_jobs": {
+                    "value": "-1"
+                }
+            }
+        },
+        "unbalance_treatment": {
+            "RandomOverSampler()": {}
+        }
+    },
+    "machine_learning": {
+        "Regression": {
+            "LinearRegression()": {}
+        }
+    },
+    "model_evaluation": {
+        "StratifiedKFold()": {
+            "n_splits": {
+                "value": "3"
+            },
+            "shuffle": {
+                "value": "True"
+            },
+            "random_state": {
+                "value": "0"
+            }
+        },
+        "Statistical_analysis": {
+            "Binomial/Pearson-R test": {}
+        }
+    }
+}

@@ -16,6 +16,8 @@ from collections import Counter
 from sklearn.preprocessing import StandardScaler, PolynomialFeatures
 from sklearn.decomposition import PCA
 from sklearn.feature_selection import RFECV
+from hyperopt import fmin, tpe, hp
+from hyperopt import fmin, tpe, hp, STATUS_OK, Trials
 from sklearn.svm import LinearSVC
 from sklearn.linear_model import LogisticRegression, RidgeClassifier, LassoCV, Lasso
 from sklearn.metrics import confusion_matrix
@@ -77,47 +79,89 @@ scaler.fit(feature_train)
 feature_train = scaler.transform(feature_train) # 切记：要使用训练集的参数对验证集和测试集进行处理
 feature_validation = scaler.transform(feature_validation)
 feature_test = scaler.transform(feature_test)
- 
-# 特征工程：降维和筛选（可选）
 
-# pca = PCA(n_components=0.9, random_state=666)
+def get_model_acc(kwargs, 
+                  feature_train, feature_validation, 
+                  targets_train, targets_validation):
+    """获取模型的准确度
+    """
+    
+    # 解析输入参数
+    # n_components = kwargs["n_components"]
+    degree = kwargs["degree"]
+    alpha = kwargs["alpha"]
+    
+    # 降维
+    # pca = PCA(n_components=n_components, random_state=666)
+    # pca.fit(feature_train)
+    # feature_train = pca.transform(feature_train) # 切记：要使用训练集的参数对验证集和测试集进行处理
+    # feature_validation = pca.transform(feature_validation)
+
+    # 生成多项式特征
+    plf = PolynomialFeatures(degree=degree)
+    plf.fit(feature_train)
+    feature_train = plf.transform(feature_train) # 切记：要使用训练集的参数对验证集和测试集进行处理
+    feature_validation = plf.transform(feature_validation)
+    
+    # 特征筛选1
+    selector = Lasso(alpha=alpha)
+    selector.fit(feature_train, targets_train)
+    mask = selector.coef_ != 0
+    feature_train = feature_train[:, mask] # 切记：要使用训练集的参数对验证集和测试集进行处理
+    feature_validation = feature_validation[:,mask]
+    
+    # 建模
+    model = LinearSVC()
+    model.fit(feature_train, targets_train)
+    
+    # 获取准确度
+    # acc_train = model.score(feature_train, targets_train)
+    acc_validation = model.score(feature_validation, targets_validation)
+    return acc_validation
+
+def f(searchspace):
+    acc = get_model_acc(searchspace, 
+                        feature_train, feature_validation, 
+                        targets_train, targets_validation)
+    return {'loss': -acc, 'status': STATUS_OK}
+
+# 参数寻优
+searchspace = {
+    # 'n_components': hp.uniform("n_components", 0.3, 0.9),
+    'degree': hp.randint("degree", 4)+1,
+    'alpha': hp.uniform("alpha", 0.01, 0.1),
+}
+
+trials = Trials()
+best = fmin(f, searchspace, algo=tpe.suggest, max_evals=20, trials=trials)
+
+
+#%% 用最佳的参数训练模模型，并测试
+# pca = PCA(n_components=best["n_components"], random_state=666)
 # pca.fit(feature_train)
-# feature_train = pca.transform(feature_train) # 切记：要使用训练集的参数对验证集和测试集进行处理
-# feature_validation = pca.transform(feature_validation)
+# feature_train = pca.transform(feature_train)
 # feature_test = pca.transform(feature_test)
 
-# 特征
-plf = PolynomialFeatures(3)
+# 生成多项式特征
+plf = PolynomialFeatures(degree=best["degree"])
 plf.fit(feature_train)
-feature_train = plf.transform(feature_train) # 切记：要使用训练集的参数对验证集和测试集进行处理
+feature_train = plf.transform(feature_train)
 feature_validation = plf.transform(feature_validation)
 feature_test = plf.transform(feature_test)
 
-# 特征筛选1
-selector = Lasso(alpha=0.02)
+# 特征筛选
+selector = Lasso(alpha=best["alpha"])
 selector.fit(feature_train, targets_train)
 mask = selector.coef_ != 0
-feature_train = feature_train[:, mask] # 切记：要使用训练集的参数对验证集和测试集进行处理
+feature_train = feature_train[:,mask]
 feature_validation = feature_validation[:,mask]
-feature_test = feature_test[:, mask]
-
-# 特征筛选2
-# selector = RFECV(estimator=LinearSVC(), cv=3, step=.1)
-# selector.fit(feature_train, targets_train)
-# feature_train = selector.transform(feature_train) # 切记：要使用训练集的参数对验证集和测试集进行处理
-# feature_validation = selector.transform(feature_validation)
-# feature_test = selector.transform(feature_test)
+feature_test = feature_test[:,mask]
 
 # 建模
 model = LinearSVC()
 model.fit(feature_train, targets_train)
 
+# 获取准确度
 acc_train = model.score(feature_train, targets_train)
 acc_validation = model.score(feature_validation, targets_validation)
-print(acc_train, acc_validation)
-
-# 测试
-# pred_test = model.predict(feature_test)
-
-# acc = np.sum((pred_test - targets_test) == 0)/len(pred_test)
-# print(acc)s
+acc_test = model.score(feature_test, targets_test)
