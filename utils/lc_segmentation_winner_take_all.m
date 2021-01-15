@@ -9,7 +9,6 @@ function lc_segmentation_winner_take_all(varargin)
 %           [--atalas, -as]: atalas of network (cortex)
 %           [--network_index, -ni]: network index of atalas
 %           [--roi2segment,-rs]: image file of roi need to segment, .nii or .img
-%           [--num_of_subregion, -ns]: number of sub-regions you want to segment the roi2segment, default is 3;
 %           
 %       OPTIONAL
 %           [--mask_file, -mf]:  mask file for filtering data, .nii or .img

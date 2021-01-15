@@ -34,7 +34,7 @@ describe = features.describe()
 features.info()
 
 # 获取数据的值
-features = features.values[:,1:]
+features = features.values[:, 1:]
 targets = targets["__Targets__"].values
 
 # 检查数据是否有缺失值
@@ -66,9 +66,10 @@ targets_validation = targets[idx_validation]
 targets_test = targets[idx_test]
 
 # 平衡数据
-# print(f"Before re-sampling, the sample size are: {sorted(Counter(targets_train).items())}")
-# feature_train, targets_train = RandomOverSampler().fit_resample(feature_train, targets_train)
-# print(f"After re-sampling, the sample size are: {sorted(Counter(targets_train).items())}")
+print(f"Before re-sampling, the sample size are: {sorted(Counter(targets_train).items())}")
+rs = RandomOverSampler()
+feature_train, targets_train = rs.fit_resample(feature_train, targets_train)
+print(f"After re-sampling, the sample size are: {sorted(Counter(targets_train).items())}")
 
 # 数据规范化:zscore
 scaler = StandardScaler()
@@ -78,8 +79,7 @@ feature_train = scaler.transform(feature_train) # 切记：要使用训练集的
 feature_validation = scaler.transform(feature_validation)
 feature_test = scaler.transform(feature_test)
  
-# 特征工程：降维和筛选（可选）
-
+# 特征工程：降维和筛选(可选)
 # pca = PCA(n_components=0.9, random_state=666)
 # pca.fit(feature_train)
 # feature_train = pca.transform(feature_train) # 切记：要使用训练集的参数对验证集和测试集进行处理
@@ -102,7 +102,7 @@ feature_validation = feature_validation[:,mask]
 feature_test = feature_test[:, mask]
 
 # 特征筛选2
-# selector = RFECV(estimator=LinearSVC(), cv=3, step=.1)
+# selector = RFECV(estimator=LinearSVC(), cv=3, step=0.1)
 # selector.fit(feature_train, targets_train)
 # feature_train = selector.transform(feature_train) # 切记：要使用训练集的参数对验证集和测试集进行处理
 # feature_validation = selector.transform(feature_validation)
@@ -111,13 +111,22 @@ feature_test = feature_test[:, mask]
 # 建模
 model = LinearSVC()
 model.fit(feature_train, targets_train)
+coef = model.coef_
 
 acc_train = model.score(feature_train, targets_train)
 acc_validation = model.score(feature_validation, targets_validation)
 print(acc_train, acc_validation)
 
 # 测试
-# pred_test = model.predict(feature_test)
+pred_test = model.predict(feature_test)
+acc = np.sum((pred_test - targets_test) == 0)/len(pred_test)
+print(acc)
 
-# acc = np.sum((pred_test - targets_test) == 0)/len(pred_test)
-# print(acc)s
+# 敏感度
+idx = [np.bool(tp) for tp in targets_test]
+pt = pred_test[idx]
+fenzi = np.sum(pt)
+fenmu = np.sum(targets_test == 1)
+sen = fenzi/fenmu
+
+# 特异度

@@ -16,15 +16,14 @@ from collections import Counter
 from sklearn.preprocessing import StandardScaler, PolynomialFeatures
 from sklearn.decomposition import PCA
 from sklearn.feature_selection import RFECV
-from hyperopt import fmin, tpe, hp
 from hyperopt import fmin, tpe, hp, STATUS_OK, Trials
 from sklearn.svm import LinearSVC
 from sklearn.linear_model import LogisticRegression, RidgeClassifier, LassoCV, Lasso
 from sklearn.metrics import confusion_matrix
 
 # 加载数据
-features_file = '../demo_data/features_whitewine.csv'
-targets_file = '../demo_data/targets_whitewine.csv'
+features_file = r'D:\My_Codes\lc_private_codes\The_first_ml_training\demo_data/features_whitewine.csv'
+targets_file = r'D:\My_Codes\lc_private_codes\The_first_ml_training\demo_data/targets_whitewine.csv'
 features = pd.read_csv(features_file)
 targets = pd.read_csv(targets_file)
 
@@ -80,6 +79,7 @@ feature_train = scaler.transform(feature_train) # 切记：要使用训练集的
 feature_validation = scaler.transform(feature_validation)
 feature_test = scaler.transform(feature_test)
 
+
 def get_model_acc(kwargs, 
                   feature_train, feature_validation, 
                   targets_train, targets_validation):
@@ -88,6 +88,7 @@ def get_model_acc(kwargs,
     
     # 解析输入参数
     # n_components = kwargs["n_components"]
+    # kwargs = {"degree":1, "alpha": 0.01}
     degree = kwargs["degree"]
     alpha = kwargs["alpha"]
     
@@ -123,18 +124,21 @@ def f(searchspace):
     acc = get_model_acc(searchspace, 
                         feature_train, feature_validation, 
                         targets_train, targets_validation)
-    return {'loss': -acc, 'status': STATUS_OK}
+    return {'loss': 1/acc, 'status': STATUS_OK}
 
+# def f(x):
+#     return x**2
 # 参数寻优
 searchspace = {
-    # 'n_components': hp.uniform("n_components", 0.3, 0.9),
-    'degree': hp.randint("degree", 4)+1,
+    'degree': hp.randint("degree", 4) + 1,
     'alpha': hp.uniform("alpha", 0.01, 0.1),
 }
 
-trials = Trials()
-best = fmin(f, searchspace, algo=tpe.suggest, max_evals=20, trials=trials)
+# x_space = hp.uniform("x", -5, 5)
 
+
+trials = Trials()
+best = fmin(f, searchspace, algo=tpe.suggest, max_evals=200, trials=trials)
 
 #%% 用最佳的参数训练模模型，并测试
 # pca = PCA(n_components=best["n_components"], random_state=666)

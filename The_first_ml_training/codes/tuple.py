@@ -17,7 +17,7 @@ type(a)
 b = (1,)
 type(b)
 
-b = (1)
+b = ("a",)
 type(b)
 
 

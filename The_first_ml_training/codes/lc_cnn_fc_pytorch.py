@@ -42,7 +42,7 @@ cov1_filter_number = 100
 cov2_kernel_size = [114, 1]
 cov2_filter_number = 200
 fc1_node_number = 100
-early_stopping = 0  # If the validation loss reached the first minimum, then stop training.
+early_stopping = 1  # If the validation loss reached the first minimum, then stop training.
 
 
 

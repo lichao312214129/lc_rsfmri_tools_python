@@ -1,0 +1,70 @@
+{
+    "data_loading": {
+        "whole": {
+            "modalities": {
+                "m1": {
+                    "file": [
+                        "D:/My_Codes/lc_private_codes/The_first_ml_training/demo_data/features_redwine.csv"
+                    ],
+                    "mask": ""
+                }
+            },
+            "targets": "D:/My_Codes/lc_private_codes/The_first_ml_training/demo_data/targets_redwine.csv",
+            "covariates": ""
+        }
+    },
+    "feature_engineering": {
+        "feature_preprocessing": {
+            "StandardScaler()": {}
+        },
+        "dimreduction": {
+            "PCA()": {
+                "n_components": {
+                    "value": "0.90"
+                }
+            }
+        },
+        "feature_selection": {
+            "SelectPercentile(f_classif)": {
+                "percentile": {
+                    "value": "0.8"
+                }
+            }
+        },
+        "unbalance_treatment": {
+            "RandomOverSampler()": {}
+        }
+    },
+    "machine_learning": {
+        "Classification": {
+            "LinearSVC()": {
+                "C": {
+                    "value": "1"
+                },
+                "multi_class": {
+                    "value": "ovr"
+                }
+            }
+        }
+    },
+    "model_evaluation": {
+        "StratifiedKFold()": {
+            "n_splits": {
+                "value": "10"
+            },
+            "shuffle": {
+                "value": "True"
+            },
+            "random_state": {
+                "value": "666"
+            }
+        },
+        "Statistical_analysis": {
+            "Permutation test": {
+                "N": {
+                    "value": "10"
+                }
+            }
+        }
+    }
+}

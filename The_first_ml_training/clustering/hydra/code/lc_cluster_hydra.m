@@ -58,9 +58,9 @@ hc_cov_file = '';
 mask_file = '';  
 output_dir = pwd;
 is_pca = 1;  
-explained_cov = 0.95; 
+explained_cov = 0.99; 
 min_clustering_solutions = 1; 
-max_clustering_solutions = 3; 
+max_clustering_solutions = 5; 
 cvfold = 3; 
 
 % Varargin parser
@@ -195,16 +195,16 @@ if  (~all(size(mask) == size(d_tmp_hc)))
     disp('Dimension of the mask and data are different');
     return;
 end
-
-if size(patient_cov,1) ~= num_patient
-    error('Number of covariates is not match number of patients!');
-    return;
-end
-
-if size(hc_cov,1) ~= num_hc
-    error('Number of covariates is not match number of hc!');
-    return;
-end
+% 
+% if size(patient_cov,1) ~= num_patient
+%     error('Number of covariates is not match number of patients!');
+%     return;
+% end
+% 
+% if size(hc_cov,1) ~= num_hc
+%     error('Number of covariates is not match number of hc!');
+%     return;
+% end
 
 % Pre-allocate
 % If fc, then only extract triu
